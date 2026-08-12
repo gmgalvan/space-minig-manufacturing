@@ -7,7 +7,7 @@
 
 def Xform "LunarRover" (
     customData = {
-        string description = "Rover lunar mínimo para Lab 01"
+        string description = "Minimal lunar rover for Lab 01"
         double lunar_gravity_m_s2 = 1.62
         double mass_kg = 45
     }

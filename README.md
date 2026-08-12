@@ -1,39 +1,39 @@
 # Space Mining & Manufacturing
 
-Laboratorio abierto para diseñar y probar sistemas de minería, robótica y manufactura fuera de la Tierra. El proyecto usa modelos pequeños y reproducibles para convertir preguntas de ingeniería —movilidad, extracción, procesamiento, energía y logística— en código, escenas OpenUSD y resultados medibles.
+An open laboratory for designing and testing off-Earth mining, robotics, and manufacturing systems. The project turns engineering questions about mobility, extraction, processing, energy, and logistics into small, reproducible models, OpenUSD scenes, and measurable results.
 
-## Estado actual
+## Current status
 
-El primer laboratorio funcional es un rover lunar mínimo:
+The first working laboratory is a minimal lunar rover:
 
-- activo geométrico creado con OpenUSD;
-- variante física con masas, colisiones y cuatro juntas revolutas;
-- escenario con terreno y gravedad lunar de `1.62 m/s²`;
-- ejecución remota en NVIDIA Isaac Sim/Isaac Lab mediante NVIDIA Brev;
-- cuatro motores PhysX a `120 grados/s`;
-- prueba observada: `3.928 m` de desplazamiento en `8.01 s`, aproximadamente `0.49 m/s`.
+- geometry authored with OpenUSD;
+- a physics variant with masses, colliders, and four revolute joints;
+- a scene with rigid terrain and lunar gravity of `1.62 m/s²`;
+- remote execution in NVIDIA Isaac Sim and Isaac Lab through NVIDIA Brev;
+- four PhysX wheel motors set to `120 degrees/s`;
+- observed test result: `3.928 m` traveled in `8.01 s`, approximately `0.49 m/s` average speed.
 
-El resultado es una prueba de integración, no una predicción del desempeño de un rover real. El suelo es una placa rígida, no hay modelo granular de regolito y aún no se calcula consumo eléctrico.
+This is an integration test, not a prediction of real rover performance. The ground is a rigid plate, granular regolith is not modeled, and electrical energy consumption is not yet calculated.
 
-## Mapa de documentación
+## Documentation map
 
-| Documento | Cuándo usarlo |
+| Document | Use it for |
 | --- | --- |
-| [Lab 01 — rover lunar](labs/01-lunar-rover/README.md) | Crear, validar y ejecutar el rover paso a paso. |
-| [NVIDIA Brev + Isaac Launchable](docs/nvidia-brev-isaac-launchable.md) | Repetir el despliegue remoto completo, resolver fallos y controlar el coste. |
-| [Stack NVIDIA](docs/nvidia-omniverse-y-simulacion.md) | Entender qué tecnología NVIDIA corresponde a cada capa del proyecto. |
-| [Guía para agentes y colaboradores](AGENTS.md) | Mantener convenciones, reproducibilidad y calidad al modificar el repositorio. |
+| [Lab 01 — Lunar Rover](labs/01-lunar-rover/README.md) | Build, validate, and run the rover step by step. |
+| [NVIDIA Brev and Isaac Launchable](docs/nvidia-brev-isaac-launchable.md) | Reproduce the remote deployment, recover failed startup, run Isaac Sim, and control cost. |
+| [NVIDIA Simulation Stack](docs/nvidia-simulation-stack.md) | Understand which NVIDIA technology belongs to each project layer. |
+| [Agent and contributor guide](AGENTS.md) | Follow modeling, reproducibility, testing, and repository conventions. |
 
-## Inicio rápido local
+## Local quick start
 
-La parte OpenUSD funciona localmente sin instalar Isaac Sim. Requisitos:
+The OpenUSD generation workflow runs locally without installing Isaac Sim. Requirements:
 
-- Linux o WSL 2;
+- Linux or WSL 2;
 - Git;
-- `curl` para instalar `uv`;
-- Python 3.10 administrado por `uv`.
+- `curl` to install `uv`;
+- Python 3.10 managed by `uv`.
 
-Desde la raíz del repositorio:
+Run from the repository root:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -48,7 +48,7 @@ uv run --python .venv/bin/python labs/01-lunar-rover/scripts/prepare_physics_rov
 uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_lunar_scene.py
 ```
 
-Salidas esperadas:
+Expected files:
 
 ```text
 assets/usd/robots/lunar_rover_v0.usda
@@ -56,23 +56,23 @@ assets/usd/robots/lunar_rover_physics_v0.usda
 labs/01-lunar-rover/lunar_rover_scene_v0.usda
 ```
 
-La validación debe terminar con:
+Expected validation message:
 
 ```text
-Validación correcta: rover, unidades y 4 ruedas presentes.
+Validation passed: rover, units, and 4 wheels are present.
 ```
 
-Para la simulación RTX/PhysX completa, continúa con la [guía de NVIDIA Brev](docs/nvidia-brev-isaac-launchable.md).
+Continue with the [NVIDIA Brev guide](docs/nvidia-brev-isaac-launchable.md) for the full RTX and PhysX simulation.
 
-## Estructura del repositorio
+## Repository layout
 
 ```text
 .
 ├── assets/
-│   └── usd/robots/                 # Activos OpenUSD visual y físico
+│   └── usd/robots/                 # Visual and physics-ready OpenUSD assets
 ├── docs/
 │   ├── nvidia-brev-isaac-launchable.md
-│   └── nvidia-omniverse-y-simulacion.md
+│   └── nvidia-simulation-stack.md
 ├── labs/
 │   └── 01-lunar-rover/
 │       ├── README.md
@@ -83,39 +83,39 @@ Para la simulación RTX/PhysX completa, continúa con la [guía de NVIDIA Brev](
 └── README.md
 ```
 
-Los archivos `.usda` se conservan en texto para poder revisar referencias, unidades, masas, juntas y cambios físicos mediante Git.
+The `.usda` files remain text-based so references, units, masses, joints, and physics changes can be reviewed with Git.
 
-## Flujo de trabajo reproducible
+## Reproducible workflow
 
-1. Cambiar los scripts fuente, no sólo el archivo USD generado.
-2. Regenerar el activo visual, la variante física y la escena.
-3. Ejecutar `validate_rover.py` localmente.
-4. Hacer commit y `git push`.
-5. En Brev, ejecutar `git pull` dentro del contenedor `vscode`.
-6. Ejecutar la simulación y registrar parámetros, versiones y resultado.
-7. Detener el proceso con `Ctrl+C` y detener la instancia cuando termine la sesión.
+1. Modify the source scripts, not only the generated USD files.
+2. Regenerate the visual asset, physics variant, and scene.
+3. Run `validate_rover.py` locally.
+4. Commit and push the changes.
+5. In Brev, run `git pull` inside the `vscode` container.
+6. Run the simulation and record parameters, versions, commit, and result.
+7. Stop the process with `Ctrl+C`, then stop or delete the paid instance.
 
 ## Roadmap
 
-1. **Movilidad lunar:** mejorar fricción, suspensión, control de distancia y telemetría.
-2. **Sensores:** cámara, IMU, LiDAR y datos sintéticos con Replicator.
-3. **Extracción:** herramienta, carga útil, masa movida, desgaste y energía.
-4. **Procesamiento ISRU:** balances de masa y energía para agua, oxígeno y metales.
-5. **Manufactura:** sinterizado e impresión con material local frente a carga enviada desde Tierra.
-6. **Operación integrada:** flota, inventario, mantenimiento, fallos y economía de misión.
+1. **Lunar mobility:** friction, suspension, distance control, and telemetry.
+2. **Sensors:** camera, IMU, LiDAR, and synthetic data with Replicator.
+3. **Extraction:** tooling, payload, moved mass, wear, and energy.
+4. **ISRU processing:** mass and energy balances for water, oxygen, and metals.
+5. **Manufacturing:** sintering and additive manufacturing with local material versus Earth-supplied mass.
+6. **Integrated operations:** fleets, inventory, maintenance, failures, and mission economics.
 
-## Convenciones
+## Conventions
 
-- Usar SI internamente: kg, m, s, K, W y Pa.
-- Separar hechos, mediciones, estimaciones y supuestos.
-- Versionar parámetros y comandos junto con el experimento.
-- No tratar una visualización exitosa como validación física.
-- Documentar limitaciones que puedan cambiar una conclusión.
+- Use SI internally: kg, m, s, K, W, and Pa.
+- Separate facts, measurements, estimates, and assumptions.
+- Version parameters and commands with every experiment.
+- Do not treat successful visualization as physical validation.
+- Document every limitation that could change a conclusion.
 
-## Seguridad y coste
+## Security and cost
 
-Una instancia GPU remota genera cargos mientras está activa. Antes de desplegar, revisa el precio mostrado por Brev. No publiques URLs privadas, IP, códigos de acceso ni credenciales. Guarda el trabajo en Git antes de detener o eliminar una instancia.
+A remote GPU instance incurs charges while active. Review Brev's displayed price before deployment. Never publish private URLs, IP addresses, access codes, or credentials. Push important work to Git before stopping or deleting an instance.
 
-## Contribuir
+## Contributing
 
-Cada laboratorio debe responder una pregunta concreta y definir una métrica de éxito. Consulta [AGENTS.md](AGENTS.md) antes de implementar cambios.
+Every laboratory must answer a concrete engineering question and define a success metric. Read [AGENTS.md](AGENTS.md) before making changes.

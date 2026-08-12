@@ -1,40 +1,40 @@
-# Guía para agentes y colaboradores
+# Agent and Contributor Guide
 
-Este repositorio explora minería y manufactura espacial mediante OpenUSD, NVIDIA Omniverse, Isaac Sim y modelos científicos. La prioridad es obtener experimentos claros, verificables y reproducibles antes de aumentar la fidelidad.
+This repository explores space mining and manufacturing with OpenUSD, NVIDIA Omniverse, Isaac Sim, and scientific models. Prefer clear, verifiable, reproducible experiments before increasing fidelity.
 
-## Resultado primero
+## Lead with the result
 
-Toda contribución debe comenzar indicando:
+Every contribution must state:
 
-1. pregunta de ingeniería;
-2. métrica de éxito;
-3. supuestos y unidades;
-4. resultado esperado o criterio de aceptación;
-5. limitaciones que impiden interpretar el resultado como realidad física.
+1. the engineering question;
+2. the success metric;
+3. assumptions and units;
+4. the expected result or acceptance criterion;
+5. limitations that prevent the result from being interpreted as physical reality.
 
-Ejemplo para el Lab 01:
+Lab 01 example:
 
 ```text
-Pregunta: ¿las cuatro ruedas y juntas PhysX pueden desplazar el rover?
-Métrica: desplazamiento del chasis en metros durante una corrida de 8 s.
-Entrada: velocidad objetivo de rueda = 120 grados/s.
-Éxito: desplazamiento positivo, sin errores de juntas desalineadas.
-Limitación: terreno rígido plano y sin modelo de energía.
+Question: Can four PhysX wheel joints move the rover?
+Metric: Chassis displacement in meters during an 8 s run.
+Input: Target wheel speed = 120 degrees/s.
+Success: Positive displacement with no misaligned-joint errors.
+Limitation: Flat rigid terrain and no energy model.
 ```
 
-## Organización
+## Repository organization
 
-- `labs/`: experimentos autocontenidos. Cada laboratorio incluye objetivo, entradas, salidas, supuestos, comandos, resultado esperado y solución de problemas.
-- `assets/`: activos compartidos. Los archivos generados deben indicar qué script es su fuente.
-- `models/`: modelos reutilizables que no dependan de un único escenario.
-- `data/raw/`: datos originales; no modificarlos.
-- `data/processed/`: datos derivados y proceso que los produjo.
-- `results/`: artefactos generados; no son fuente de verdad.
-- `docs/`: arquitectura, instalación, operación, decisiones y referencias.
+- `labs/`: self-contained experiments with objectives, inputs, outputs, assumptions, commands, expected results, and troubleshooting.
+- `assets/`: shared assets. Generated files must identify their source script.
+- `models/`: reusable models independent of a single scenario.
+- `data/raw/`: original data; do not modify it.
+- `data/processed/`: derived data and the process that produced it.
+- `results/`: generated artifacts; never use them as source truth.
+- `docs/`: architecture, setup, operations, decisions, and references.
 
-## Fuente y artefactos generados
+## Source files and generated artifacts
 
-En el Lab 01, el orden canónico es:
+The canonical Lab 01 generation chain is:
 
 ```text
 create_rover.py
@@ -45,102 +45,98 @@ create_rover.py
                           └── labs/01-lunar-rover/lunar_rover_scene_v0.usda
 ```
 
-Si cambia geometría, física o composición, modificar el script correspondiente y regenerar los `.usda`. No corregir únicamente el artefacto generado porque el cambio se perderá en la siguiente generación.
+When geometry, physics, or composition changes, edit the corresponding script and regenerate the `.usda` files. Do not patch only a generated artifact because the next generation will overwrite the change.
 
-## Convenciones de modelado
+## Modeling conventions
 
-- Usar SI internamente y expresar la unidad en nombres como `mass_kg`, `power_w` o `gravity_m_s2`.
-- En USD, declarar `metersPerUnit = 1` y eje vertical `Z` salvo decisión documentada.
-- Nombrar rutas de prim estables; los scripts de control dependen de ellas.
-- Separar geometría visual, cuerpos rígidos, colisiones, juntas y escenario.
-- Aplicar masa al cuerpo rígido correcto, no a un descendiente visual sin justificación.
-- Alinear los anclajes de las juntas en las coordenadas locales de ambos cuerpos.
-- Evitar números mágicos: cada valor físico debe tener nombre, unidad y procedencia o marcarse como provisional.
-- Registrar semillas aleatorias cuando exista aleatorización.
-- Verificar conservación de masa y energía cuando el laboratorio modele procesos físicos.
+- Use SI internally and include units in names such as `mass_kg`, `power_w`, and `gravity_m_s2`.
+- In USD, use `metersPerUnit = 1` and `Z` as the up axis unless a documented decision says otherwise.
+- Keep prim paths stable because control scripts depend on them.
+- Separate visual geometry, rigid bodies, collision geometry, joints, and the world scene.
+- Apply mass to the intended rigid body rather than an arbitrary visual descendant.
+- Align joint anchors in the local coordinates of both connected bodies.
+- Avoid magic numbers. Every physical value needs a name, unit, and source or a clear provisional label.
+- Record random seeds whenever randomization is used.
+- Check mass and energy conservation whenever a process model requires them.
 
-## Reproducibilidad obligatoria
+## Reproducibility requirements
 
-Todo README de laboratorio debe incluir:
+Every laboratory README must include:
 
-- versiones conocidas de software y hardware;
-- ruta desde la cual se ejecuta cada comando;
-- entradas y valores predeterminados;
-- archivos de salida;
-- texto o métrica esperada;
-- cómo detener procesos persistentes;
-- cómo limpiar o repetir sin destruir trabajo;
-- síntomas conocidos y diagnóstico mínimo.
+- known software and hardware versions;
+- the directory from which each command runs;
+- inputs and defaults;
+- output files;
+- expected messages or metrics;
+- how to stop persistent processes;
+- how to repeat safely;
+- known symptoms and minimum diagnostics.
 
-Para una corrida remota, registrar como mínimo:
+Record at least the following for remote runs:
 
 ```text
-fecha
-commit de Git
+date
+Git commit
 GPU
 driver
 CUDA
 Isaac Sim
 Isaac Lab
-script y argumentos
-resultado
-advertencias relevantes
+script and arguments
+result
+relevant warnings
 ```
 
-No incluir secretos, códigos temporales de login, IP públicas o URLs privadas en commits ni capturas públicas.
+Never commit secrets, temporary login codes, public IP addresses, or private service URLs.
 
-## Flujo para cambiar el Lab 01
+## Lab 01 change workflow
 
-Desde la raíz local:
+From the local repository root:
 
 ```bash
 uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_rover.py
 uv run --python .venv/bin/python labs/01-lunar-rover/scripts/validate_rover.py
 uv run --python .venv/bin/python labs/01-lunar-rover/scripts/prepare_physics_rover.py
 uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_lunar_scene.py
-```
 
-Después:
-
-```bash
 git diff --check
 git status --short
 ```
 
-En Brev, actualizar la copia dentro del contenedor:
+Update the copy inside Brev's Isaac container with:
 
 ```bash
 docker exec -u ubuntu vscode bash -lc \
   'cd /workspace/space-minig-manufacturing && git pull --ff-only'
 ```
 
-No asumir que la copia del host `~/space-minig-manufacturing` y la copia del contenedor `/workspace/space-minig-manufacturing` se actualizan juntas.
+The host copy at `~/space-minig-manufacturing` and the container copy at `/workspace/space-minig-manufacturing` do not update each other.
 
-## Pruebas y criterios de aceptación
+## Acceptance checks
 
-Antes de entregar cambios:
+Before delivering a physics or control change:
 
-1. ejecutar la validación OpenUSD local;
-2. revisar `git diff --check`;
-3. si cambió física o control, ejecutar Isaac Sim;
-4. confirmar que los cuatro motores se configuran;
-5. comprobar desplazamiento y ausencia de advertencias nuevas sobre juntas;
-6. actualizar el resultado documentado sólo si la corrida fue realmente observada.
+1. run the local OpenUSD validation;
+2. run `git diff --check`;
+3. execute Isaac Sim;
+4. verify all four motors are configured;
+5. verify positive displacement and no new joint warnings;
+6. update the documented result only after observing a real run.
 
-Las advertencias headless de GLFW o `/var/run/utmp` pueden ser inocuas en Brev. Una advertencia de `joint with disjointed body transforms` sí afecta el modelo y debe corregirse, no ignorarse.
+Headless GLFW or `/var/run/utmp` warnings can be harmless in Brev. A `joint with disjointed body transforms` warning changes the physical assembly and must be fixed.
 
-## Calidad de los cambios
+## Change quality
 
-- Preservar cambios ajenos y no eliminar datos o resultados sin autorización.
-- Mantener cada cambio enfocado.
-- Usar referencias USD relativas para que el repositorio sea portable.
-- No agregar `.venv`, cachés, logs, credenciales ni archivos grandes accidentales.
-- Preferir comandos no interactivos y documentar cuándo se necesita `Ctrl+C`.
-- Cuando falten datos, usar un valor provisional claramente marcado y crear una nota de seguimiento.
+- Preserve unrelated user changes and never delete data without authorization.
+- Keep changes focused.
+- Use relative USD references for portability.
+- Do not commit `.venv`, caches, logs, credentials, or accidental large files.
+- Document when a persistent process requires `Ctrl+C`.
+- Mark provisional data clearly and create a follow-up note.
 
 ## Git
 
-Antes de publicar:
+Before publishing:
 
 ```bash
 git status --short
@@ -148,21 +144,19 @@ git diff --check
 git diff
 ```
 
-Configurar identidad sólo para este repositorio cuando sea necesario:
+Configure identity only for this repository when needed:
 
 ```bash
-git config user.name "TU NOMBRE"
-git config user.email "TU EMAIL"
+git config user.name "YOUR NAME"
+git config user.email "YOUR EMAIL"
 ```
 
-No guardar credenciales en archivos del repositorio.
+## Communication
 
-## Comunicación
+Explain the result first, followed by the procedure. Distinguish between:
 
-Explicar primero el resultado y después el procedimiento. Distinguir entre:
+- **structural validation:** the USD contains the expected prims and metadata;
+- **integration validation:** Isaac Sim opens and runs the scene;
+- **physical validation:** the model accurately represents a real system.
 
-- **validación estructural:** el USD contiene los prims y metadatos esperados;
-- **validación de integración:** Isaac Sim abre y ejecuta la escena;
-- **validación física:** el modelo representa con precisión un sistema real.
-
-El Lab 01 ya cumple las dos primeras de manera básica; todavía no constituye validación física de movilidad sobre regolito.
+Lab 01 currently provides basic structural and integration validation. It is not physical validation of mobility over lunar regolith.

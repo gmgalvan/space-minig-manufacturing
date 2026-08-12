@@ -1,79 +1,77 @@
-# Lab 01 — Rover lunar mínimo en OpenUSD e Isaac Sim
+# Lab 01 — Minimal OpenUSD Lunar Rover in Isaac Sim
 
-## Resultado
+## Result
 
-Este laboratorio genera un rover OpenUSD, añade física PhysX, lo coloca en una escena con gravedad lunar y activa las cuatro ruedas desde Isaac Sim. La corrida de referencia desplazó el chasis `3.928 m` en `8.01 s` con una velocidad angular objetivo de `120 grados/s`.
+This laboratory generates an OpenUSD rover, adds PhysX behavior, places it in a lunar-gravity scene, and drives all four wheels in Isaac Sim. The reference run moved the chassis `3.928 m` in `8.01 s` with a target wheel speed of `120 degrees/s`.
 
-El propósito es validar la cadena completa OpenUSD → PhysX → Isaac Sim → livestream → métrica. No es todavía un modelo validado de movilidad sobre regolito.
+The goal is to validate the complete OpenUSD → PhysX → Isaac Sim → livestream → measurement pipeline. This is not yet a validated model of mobility over lunar regolith.
 
-## Pregunta y criterio de éxito
+## Engineering question and success criteria
 
-**Pregunta:** ¿podemos describir un rover portable en OpenUSD y moverlo mediante cuatro juntas revolutas en NVIDIA Isaac Sim?
+**Question:** Can a portable OpenUSD rover move through four revolute joints in NVIDIA Isaac Sim?
 
-**Criterios de éxito:**
+**Success criteria:**
 
-- el USD usa metros y eje vertical `Z`;
-- existen chasis, cuatro ruedas y sensor frontal;
-- la escena usa gravedad de `1.62 m/s²`;
-- Isaac Sim abre todas las referencias;
-- se configuran los cuatro motores sin advertencias de juntas desalineadas;
-- el desplazamiento medido del chasis es positivo.
+- the USD stage uses meters and a `Z` up axis;
+- the chassis, four wheels, and front sensor marker exist;
+- the scene uses gravity of `1.62 m/s²`;
+- Isaac Sim resolves all references;
+- all four motors are configured without misaligned-joint warnings;
+- measured chassis displacement is positive.
 
-## Arquitectura del laboratorio
+## Generation pipeline
 
 ```text
 create_rover.py
-  │ genera geometría y metadatos
+  │ generates geometry and metadata
   ▼
 assets/usd/robots/lunar_rover_v0.usda
-  │ añade cuerpos rígidos, colisiones, masas y juntas
+  │ adds rigid bodies, colliders, masses, and joints
   ▼
 prepare_physics_rover.py
   ▼
 assets/usd/robots/lunar_rover_physics_v0.usda
-  │ se referencia desde una escena portable
+  │ is referenced by a portable scene
   ▼
 create_lunar_scene.py
   ▼
 labs/01-lunar-rover/lunar_rover_scene_v0.usda
   │
-  ├── run_lunar_rover.py       abre e inspecciona
-  └── drive_lunar_rover.py     aplica motores y mide distancia
+  ├── run_lunar_rover.py       opens the scene for inspection
+  └── drive_lunar_rover.py     applies motors and measures distance
 ```
 
-## Modelo actual
+## Current model
 
-| Elemento | Valor |
+| Component | Value |
 | --- | --- |
-| Chasis visual | `1.20 × 0.80 × 0.35 m` |
-| Radio de rueda | `0.18 m` |
-| Altura/longitud axial de rueda | `0.12 m` |
-| Masa de chasis físico | `35 kg` |
-| Masa por rueda | `2.5 kg` |
-| Masa física total | `45 kg` |
-| Gravedad | `1.62 m/s²` hacia `-Z` |
-| Terreno | cubo estático `20 × 20 × 0.10 m` |
-| Eje de rueda/junta | `Y` |
-| Motor predeterminado | `120 grados/s`, fuerza máxima `250`, damping `2` |
-| Duración predeterminada | `8 s` |
+| Visual chassis | `1.20 × 0.80 × 0.35 m` |
+| Wheel radius | `0.18 m` |
+| Wheel axial length | `0.12 m` |
+| Chassis rigid-body mass | `35 kg` |
+| Mass per wheel | `2.5 kg` |
+| Total physical mass | `45 kg` |
+| Gravity | `1.62 m/s²` toward `-Z` |
+| Ground | static `20 × 20 × 0.10 m` box |
+| Wheel and joint axis | `Y` |
+| Default motor | `120 degrees/s`, maximum force `250`, damping `2` |
+| Default run duration | `8 s` |
 
-La cámara frontal y antena son geometría/metadata; aún no producen observaciones de sensor.
+The front camera and antenna are currently geometry and metadata markers; they do not produce sensor observations.
 
-## Parte A — Preparación local con `uv`
+## Part A — Local setup with `uv`
 
-### 1. Entrar a la raíz
-
-Todos los comandos locales siguientes se ejecutan desde:
+### 1. Enter the repository root
 
 ```bash
 cd ~/memo/space-minig-manufacturing
 ```
 
-Ajusta la ruta si clonaste el repositorio en otro lugar.
+Adjust the path if the repository was cloned elsewhere.
 
-### 2. Instalar `uv`
+### 2. Install `uv`
 
-Sólo la primera vez:
+Run once:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -81,24 +79,24 @@ export PATH="$HOME/.local/bin:$PATH"
 uv --version
 ```
 
-Al abrir una terminal nueva, normalmente `~/.local/bin` ya estará disponible. Si `uv: command not found` reaparece, vuelve a exportar el `PATH` o reinicia la terminal.
+If a new terminal reports `uv: command not found`, export the path again or restart the terminal.
 
-### 3. Crear el entorno e instalar OpenUSD Python
+### 3. Create the environment and install OpenUSD Python
 
 ```bash
 uv venv --python 3.10
 uv pip install --python .venv/bin/python usd-core
 ```
 
-Si `.venv` ya existe y `uv` pregunta si debe reemplazarlo, responde `no` cuando quieras conservarlo. Para comprobar el paquete:
+Verify the package:
 
 ```bash
 uv run --python .venv/bin/python -c 'from pxr import Usd; print(Usd.GetVersion())'
 ```
 
-## Parte B — Generar todos los USD
+## Part B — Generate and validate the USD files
 
-Ejecuta en este orden:
+Run in this exact order:
 
 ```bash
 uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_rover.py
@@ -107,16 +105,16 @@ uv run --python .venv/bin/python labs/01-lunar-rover/scripts/prepare_physics_rov
 uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_lunar_scene.py
 ```
 
-Salida esperada:
+Expected output:
 
 ```text
-Rover creado: .../assets/usd/robots/lunar_rover_v0.usda
-Validación correcta: rover, unidades y 4 ruedas presentes.
-Variante física creada: .../assets/usd/robots/lunar_rover_physics_v0.usda
-Escena lunar creada: .../labs/01-lunar-rover/lunar_rover_scene_v0.usda
+Rover created: .../assets/usd/robots/lunar_rover_v0.usda
+Validation passed: rover, units, and 4 wheels are present.
+Physics variant created: .../assets/usd/robots/lunar_rover_physics_v0.usda
+Lunar scene created: .../labs/01-lunar-rover/lunar_rover_scene_v0.usda
 ```
 
-Comprobar los archivos:
+Confirm the files:
 
 ```bash
 ls -lh assets/usd/robots/lunar_rover_v0.usda \
@@ -124,63 +122,61 @@ ls -lh assets/usd/robots/lunar_rover_v0.usda \
   labs/01-lunar-rover/lunar_rover_scene_v0.usda
 ```
 
-La escena usa una referencia relativa:
+The scene references the rover with this relative path:
 
 ```text
 ../../assets/usd/robots/lunar_rover_physics_v0.usda
 ```
 
-Esto permite clonar el repositorio en otra máquina sin corregir rutas absolutas.
+Relative references make the repository portable across machines and containers.
 
-## Parte C — Publicar antes de usar Brev
-
-Revisa y publica los cambios:
+## Part C — Publish before using Brev
 
 ```bash
 git status --short
 git diff --check
 git add README.md AGENTS.md docs labs assets .gitignore
-git commit -m "docs: document reproducible lunar rover workflow"
+git commit -m "docs: standardize project documentation in English"
 git push
 ```
 
-Adapta el `git add` si no quieres incluir todos esos directorios. La identidad de Git exclusiva del repositorio se configura con:
+Configure repository-only Git identity when needed:
 
 ```bash
-git config user.name "TU NOMBRE"
-git config user.email "TU EMAIL"
+git config user.name "YOUR NAME"
+git config user.email "YOUR EMAIL"
 ```
 
-## Parte D — Preparar NVIDIA Brev
+## Part D — Prepare NVIDIA Brev
 
-Sigue la guía completa [NVIDIA Brev + Isaac Launchable](../../docs/nvidia-brev-isaac-launchable.md). El resumen es:
+Follow the complete [NVIDIA Brev and Isaac Launchable guide](../../docs/nvidia-brev-isaac-launchable.md). In summary:
 
-1. desplegar **Isaac Launchable** sobre una GPU RTX, en esta prueba una L40S;
-2. esperar `RUNNING`, `COMPLETED` y `READY`;
-3. entrar con `brev shell space-mining-lab-01`;
-4. levantar/reparar los contenedores si el lifecycle script falla;
-5. clonar el repositorio dentro de `/workspace` del contenedor `vscode`;
-6. abrir el enlace `isaac` y añadir `/viewer/` si hace falta.
+1. deploy **Isaac Launchable** on an RTX-capable GPU; the reference run used an L40S;
+2. wait for `RUNNING`, `COMPLETED`, and `READY`;
+3. connect with `brev shell space-mining-lab-01`;
+4. recover the containers if the lifecycle script fails;
+5. clone the repository into `/workspace` inside the `vscode` container;
+6. open the `isaac` service and append `/viewer/` when necessary.
 
-## Parte E — Sincronizar cambios en el contenedor
+## Part E — Synchronize the container copy
 
-Desde el host remoto, normalmente en `~/isaac-launchable/isaac-lab`:
+Run on the remote host:
 
 ```bash
 docker exec -u ubuntu vscode bash -lc \
   'cd /workspace/space-minig-manufacturing && git pull --ff-only'
 ```
 
-Hay dos copias independientes:
+There are two independent copies:
 
-- host remoto: `~/space-minig-manufacturing`;
-- contenedor Isaac: `/workspace/space-minig-manufacturing`.
+- remote host: `~/space-minig-manufacturing`;
+- Isaac container: `/workspace/space-minig-manufacturing`.
 
-La simulación usa la segunda. Hacer `git pull` sólo en el host no actualiza el contenedor.
+Isaac Sim uses the second copy. Pulling only on the host does not update the container.
 
-## Parte F — Abrir la escena sin motores
+## Part F — Open the scene without wheel motors
 
-Desde el host remoto:
+From the remote host:
 
 ```bash
 cd ~/isaac-launchable/isaac-lab
@@ -189,61 +185,61 @@ docker exec -it -u ubuntu:ubuntu -w /workspace/isaaclab vscode bash -lc \
   './isaaclab.sh -p /workspace/space-minig-manufacturing/labs/01-lunar-rover/scripts/run_lunar_rover.py --livestream 2 --viz kit'
 ```
 
-Esperar:
+Wait for:
 
 ```text
-[INFO]: Escena lunar abierta: /workspace/space-minig-manufacturing/labs/01-lunar-rover/lunar_rover_scene_v0.usda
-[INFO]: Simulación activa; detener con Ctrl+C.
+[INFO]: Lunar scene opened: /workspace/space-minig-manufacturing/labs/01-lunar-rover/lunar_rover_scene_v0.usda
+[INFO]: Simulation is active; stop it with Ctrl+C.
 ```
 
-Mantén esa terminal abierta. En el navegador abre el servicio Isaac y visita `/viewer/`. El botón Play de la interfaz no es necesario: el script ya ejecuta `timeline.play()`.
+Keep the terminal open. In the browser, open the Isaac service and visit `/viewer/`. The script already calls `timeline.play()`, so no UI Play button is required.
 
-Para cerrar, vuelve a la terminal y presiona `Ctrl+C` una vez. Si ves de nuevo el prompt `ubuntu@brev-...$`, el proceso terminó.
+Return to the terminal and press `Ctrl+C` once to stop the process. Continue only after the `ubuntu@brev-...$` prompt returns.
 
-## Parte G — Ejecutar la prueba de tracción
+## Part G — Run the traction test
 
-Asegúrate de que no haya otro Isaac Sim usando el livestream. Luego ejecuta:
+Make sure no other Isaac Sim livestream process is active, then run:
 
 ```bash
 docker exec -it -u ubuntu:ubuntu -w /workspace/isaaclab vscode bash -lc \
   './isaaclab.sh -p /workspace/space-minig-manufacturing/labs/01-lunar-rover/scripts/drive_lunar_rover.py --livestream 2 --viz kit --duration 8 --wheel-speed 120'
 ```
 
-El script:
+The script:
 
-1. abre la escena;
-2. busca las cuatro juntas bajo `/World/LunarRover/Joints`;
-3. aplica `UsdPhysics.DriveAPI` angular;
-4. inicia la línea de tiempo;
-5. mide la transformación mundial del chasis;
-6. detiene la física después de la duración solicitada;
-7. conserva la aplicación abierta para inspección.
+1. opens the scene;
+2. locates the four joints under `/World/LunarRover/Joints`;
+3. applies an angular `UsdPhysics.DriveAPI` to each joint;
+4. starts the timeline;
+5. measures the chassis world transform;
+6. stops physics after the requested duration;
+7. keeps the application open for inspection.
 
-Salida de referencia observada:
+Reference output:
 
 ```text
-[DEBUG]: Escena cargada; configurando motores...
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/FrontLeftAxle
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/FrontRightAxle
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/RearLeftAxle
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/RearRightAxle
-[INFO]: Motores activos durante 8.0 s.
-[RESULT]: desplazamiento=3.928 m; duración=8.01 s
-[INFO]: La escena queda abierta para inspección. Detener con Ctrl+C.
+[DEBUG]: Scene loaded; configuring motors...
+[DEBUG]: Motor configured: /World/LunarRover/Joints/FrontLeftAxle
+[DEBUG]: Motor configured: /World/LunarRover/Joints/FrontRightAxle
+[DEBUG]: Motor configured: /World/LunarRover/Joints/RearLeftAxle
+[DEBUG]: Motor configured: /World/LunarRover/Joints/RearRightAxle
+[INFO]: Motors active for 8.0 s.
+[RESULT]: displacement=3.928 m; duration=8.01 s
+[INFO]: The scene remains open for inspection. Stop it with Ctrl+C.
 ```
 
-La distancia puede variar según versión, paso de simulación y estado del entorno. Para una prueba aproximada de `5 m` usando la velocidad observada:
+Distance can vary with software version, simulation step, and environment state. An approximate `5 m` run based on the observed speed is:
 
 ```bash
 docker exec -it -u ubuntu:ubuntu -w /workspace/isaaclab vscode bash -lc \
   './isaaclab.sh -p /workspace/space-minig-manufacturing/labs/01-lunar-rover/scripts/drive_lunar_rover.py --livestream 2 --viz kit --duration 10.2 --wheel-speed 120'
 ```
 
-Esto no controla exactamente 5 m; sólo aumenta el tiempo. Un controlador por distancia es una mejora pendiente.
+This does not stop at exactly 5 m; it only extends the duration. Distance-based control is a planned improvement.
 
-## Inspección visual
+## Visual inspection
 
-En el panel **Stage** debe aparecer:
+The Stage panel should contain:
 
 ```text
 /World
@@ -260,11 +256,11 @@ En el panel **Stage** debe aparecer:
     └── Joints
 ```
 
-Puedes seleccionar `LunarRover` y presionar `F` para enfocar la cámara. Usa rueda del ratón para acercar/alejar y `Alt` + botones del ratón para orbitar según la configuración del viewer.
+Select `LunarRover` and press `F` to frame it. Use the mouse wheel to zoom and the configured `Alt` + mouse controls to orbit.
 
-## Advertencias conocidas
+## Known warnings
 
-Estas advertencias aparecieron en la ejecución remota y no bloquearon la prueba:
+These warnings appeared remotely and did not block the reference run:
 
 ```text
 Failed to open [/var/run/utmp]
@@ -273,41 +269,41 @@ GLFW initialization failed
 Possible version incompatibility ... IStageReaderWriter ...
 ```
 
-Son compatibles con un entorno remoto/headless si después aparecen `Simulation App Startup Complete`, `app ready` y el resultado.
+They are acceptable in this headless environment when `Simulation App Startup Complete`, `app ready`, and the result follow.
 
-Esta advertencia sí indica un error del modelo:
+This warning indicates a real model problem:
 
 ```text
 CreateJoint - found a joint with disjointed body transforms
 ```
 
-Si aparece, no aceptes la corrida. Regenera con los scripts actuales y confirma que cada `localPos0` coincide con la posición de su rueda y que `localPos1` es `(0, 0, 0)`.
+Do not accept that run. Regenerate with the current scripts and verify that every `localPos0` matches its wheel position and every `localPos1` is `(0, 0, 0)`.
 
-## Repetir una corrida
+## Repeat a run
 
-1. Presiona `Ctrl+C` en el proceso actual.
-2. Confirma que regresó el prompt.
-3. Ejecuta `git pull --ff-only` dentro del contenedor si hubo cambios.
-4. vuelve a lanzar `drive_lunar_rover.py`.
-5. Recarga `/viewer/` si queda en `WAITING FOR STREAM`.
+1. Press `Ctrl+C` in the active process.
+2. Confirm that the shell prompt returns.
+3. Pull inside the container if the project changed.
+4. Run `drive_lunar_rover.py` again.
+5. Refresh `/viewer/` if it remains on `WAITING FOR STREAM`.
 
-No lances dos procesos Isaac Sim con livestream al mismo tiempo: pueden competir por la sesión y producir `Got stop event while waiting for client connection`.
+Never launch two Isaac Sim livestream processes simultaneously. They can compete for the session and produce `Got stop event while waiting for client connection`.
 
-## Limitaciones
+## Limitations
 
-- suelo plano y rígido;
-- fricción no calibrada contra regolito;
-- ruedas sin suspensión ni dirección independiente;
-- motor con parámetros provisionales;
-- sin batería, potencia, par medido ni deslizamiento reportado;
-- sin sensores funcionales;
-- sin validación contra hardware o datos lunares.
+- flat, rigid ground;
+- friction is not calibrated against regolith;
+- no suspension or independent steering;
+- provisional motor parameters;
+- no battery, measured torque, power, or reported slip;
+- no functional sensors;
+- no validation against hardware or lunar test data.
 
-## Próximas mejoras
+## Next improvements
 
-1. detener automáticamente al alcanzar una distancia objetivo;
-2. registrar posición, velocidad y consumo por paso;
-3. parametrizar fricción y pendiente;
-4. añadir suspensión y control diferencial;
-5. modelar energía y estado de batería;
-6. agregar cámara/IMU y una tarea de navegación.
+1. stop automatically at a target distance;
+2. record position, speed, and energy telemetry;
+3. parameterize friction and slope;
+4. add suspension and differential control;
+5. model battery energy;
+6. add camera and IMU observations plus a navigation task.

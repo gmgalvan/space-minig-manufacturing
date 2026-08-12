@@ -1,4 +1,4 @@
-"""Crea una variante del rover preparada para PhysX/Isaac Sim."""
+"""Create a rover variant prepared for PhysX and Isaac Sim."""
 
 from pathlib import Path
 
@@ -23,7 +23,7 @@ def add_rigid_body(prim: Usd.Prim, mass_kg: float) -> None:
 
 def main() -> None:
     if not SOURCE_PATH.exists():
-        raise RuntimeError("Primero ejecuta create_rover.py para generar el activo visual.")
+        raise RuntimeError("Run create_rover.py first to generate the visual asset.")
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     stage = Usd.Stage.Open(str(SOURCE_PATH))
@@ -53,7 +53,7 @@ def main() -> None:
     rover.SetCustomDataByKey("physics_ready", True)
     rover.SetCustomDataByKey("physics_backend_target", "NVIDIA PhysX / Isaac Sim")
     stage.GetRootLayer().Save()
-    print(f"Variante física creada: {OUTPUT_PATH}")
+    print(f"Physics variant created: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

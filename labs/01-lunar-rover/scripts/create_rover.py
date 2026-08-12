@@ -1,4 +1,4 @@
-"""Genera el activo OpenUSD del rover lunar mínimo."""
+"""Generate the minimal lunar rover OpenUSD asset."""
 
 from pathlib import Path
 
@@ -12,7 +12,7 @@ LUNAR_GRAVITY_M_S2 = 1.62
 
 
 def define_box(stage: Usd.Stage, path: str, size: tuple[float, float, float], position: tuple[float, float, float]):
-    """Crea una caja centrada en `position`, con dimensiones en metros."""
+    """Create a box centered at `position`, with dimensions in meters."""
     cube = UsdGeom.Cube.Define(stage, path)
     cube.CreateSizeAttr(1.0)
     cube.AddTranslateOp().Set(Gf.Vec3d(*position))
@@ -21,7 +21,7 @@ def define_box(stage: Usd.Stage, path: str, size: tuple[float, float, float], po
 
 
 def define_wheel(stage: Usd.Stage, name: str, position: tuple[float, float, float]):
-    """Crea una rueda visual con el eje a lo largo de Y."""
+    """Create a visual wheel whose axis runs along Y."""
     wheel = UsdGeom.Cylinder.Define(stage, f"/LunarRover/Wheels/{name}")
     wheel.CreateRadiusAttr(0.18)
     wheel.CreateHeightAttr(0.12)
@@ -38,7 +38,7 @@ def main() -> None:
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
 
     rover = UsdGeom.Xform.Define(stage, "/LunarRover")
-    rover.GetPrim().SetCustomDataByKey("description", "Rover lunar mínimo para Lab 01")
+    rover.GetPrim().SetCustomDataByKey("description", "Minimal lunar rover for Lab 01")
     rover.GetPrim().SetCustomDataByKey("mass_kg", 45.0)
     rover.GetPrim().SetCustomDataByKey("lunar_gravity_m_s2", LUNAR_GRAVITY_M_S2)
 
@@ -62,7 +62,7 @@ def main() -> None:
 
     stage.SetDefaultPrim(rover.GetPrim())
     stage.GetRootLayer().Save()
-    print(f"Rover creado: {OUTPUT_PATH}")
+    print(f"Rover created: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

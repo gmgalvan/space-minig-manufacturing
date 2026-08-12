@@ -1,4 +1,4 @@
-"""Crea una escena lunar mínima que referencia el rover preparado para física."""
+"""Create a minimal lunar scene that references the physics-ready rover."""
 
 import os
 from pathlib import Path
@@ -13,7 +13,7 @@ OUTPUT_PATH = REPOSITORY_ROOT / "labs" / "01-lunar-rover" / "lunar_rover_scene_v
 
 def main() -> None:
     if not ROVER_PATH.exists():
-        raise RuntimeError("Primero ejecuta prepare_physics_rover.py.")
+        raise RuntimeError("Run prepare_physics_rover.py first.")
 
     stage = Usd.Stage.CreateNew(str(OUTPUT_PATH))
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
@@ -38,7 +38,7 @@ def main() -> None:
 
     stage.SetDefaultPrim(stage.GetPrimAtPath("/World"))
     stage.GetRootLayer().Save()
-    print(f"Escena lunar creada: {OUTPUT_PATH}")
+    print(f"Lunar scene created: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

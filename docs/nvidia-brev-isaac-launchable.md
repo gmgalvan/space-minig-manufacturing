@@ -1,48 +1,47 @@
-# NVIDIA Brev + Isaac Launchable: guía reproducible
+# NVIDIA Brev and Isaac Launchable: Reproducible Guide
 
-Procedimiento completo para desplegar una GPU NVIDIA en Brev, recuperar Isaac Launchable si falla, abrir el viewer y ejecutar el Lab 01. Los comandos y diagnósticos provienen de una sesión real completada el 12 de agosto de 2026.
+This guide covers the complete process for provisioning an NVIDIA GPU in Brev, recovering a failed Isaac Launchable startup, opening the web viewer, and running Lab 01. The commands and diagnostics come from a successful session completed on August 12, 2026.
 
-## Resultado de referencia
+## Reference result
 
-| Componente | Valor observado |
+| Component | Observed value |
 | --- | --- |
-| Proveedor | AWS mediante NVIDIA Brev |
-| GPU | NVIDIA L40S, aproximadamente `44.7 GiB` utilizables |
-| CPU/RAM | 16 CPU, 128 GiB RAM |
-| Driver remoto | `595.71.05` |
-| CUDA reportada por el driver | `13.2` |
+| Provider | AWS through NVIDIA Brev |
+| GPU | NVIDIA L40S, approximately `44.7 GiB` usable VRAM |
+| CPU and RAM | 16 CPUs, 128 GiB RAM |
+| Remote driver | `595.71.05` |
+| CUDA reported by driver | `13.2` |
 | Isaac Sim | `6.0.1` |
-| Isaac Lab | `3.0.0-beta2-post1` / extensión `3.0.0` |
-| Contenedor principal | `vscode` |
-| Proyecto dentro del contenedor | `/workspace/space-minig-manufacturing` |
-| Resultado | `3.928 m` en `8.01 s` a `120 grados/s` |
+| Isaac Lab | `3.0.0-beta2-post1` / extension `3.0.0` |
+| Main container | `vscode` |
+| Project path in container | `/workspace/space-minig-manufacturing` |
+| Traction result | `3.928 m` in `8.01 s` at `120 degrees/s` |
 
-Estos valores describen la sesión de referencia, no requisitos permanentes. Brev puede cambiar disponibilidad, región, proveedor, precio e imágenes. Usa siempre el precio y las versiones mostradas al desplegar.
+These values describe the reference session, not permanent requirements. Availability, region, provider, price, and images can change. Always use the values displayed by Brev at deployment time.
 
-## Coste y seguridad
+## Cost and security
 
-- Brev cobra mientras el entorno está activo; en la sesión observada el precio mostrado cambió según proveedor/pantalla y llegó a aproximadamente `$3.65/h`.
-- Los `$10` de crédito no hacen gratis la instancia: representan cerca de 2–3 horas a ese precio.
-- Verifica el indicador `$/hr` antes de pulsar **Deploy**.
-- No publiques códigos de login, IP, hostname, URL privada del viewer ni credenciales.
-- Haz `git push` antes de detener o eliminar la máquina.
-- **Stop** conserva una instancia reiniciable; **Delete** destruye el almacenamiento de esa instancia.
+- Brev charges while compute is active. The reference session reached approximately `$3.65/hour`.
+- A `$10` credit balance does not make the instance free; it funds only about 2–3 hours at that rate.
+- A stopped instance may continue charging for storage. The observed rate was `$0.04/hour`, or about `$0.96/day`.
+- Review the displayed hourly rate before deploying.
+- Never publish login codes, public IP addresses, hostnames, private viewer URLs, or credentials.
+- Push important work before stopping or deleting the machine.
+- **Stop** preserves a restartable instance and its storage. **Delete** permanently removes the remote disk and stops storage charges.
 
-## Mapa de terminales
+## Understand the three terminals
 
-Durante el procedimiento aparecen tres contextos. Reconócelos por el prompt:
-
-| Contexto | Prompt aproximado | Qué se ejecuta allí |
+| Context | Typical prompt | Commands run there |
 | --- | --- | --- |
-| Equipo local/WSL | `usuario@equipo:~/memo/...$` | `uv`, Git, `brev login`, `brev shell` |
-| Host remoto Brev | `ubuntu@brev-...:~$` | Docker Compose y `docker exec` |
-| Contenedor `vscode` | normalmente se usa mediante `docker exec` | Isaac Sim, Isaac Lab y repo en `/workspace` |
+| Local machine or WSL | `user@computer:~/memo/...$` | `uv`, Git, `brev login`, `brev shell` |
+| Brev remote host | `ubuntu@brev-...:~$` | Docker Compose and `docker exec` |
+| `vscode` container | usually entered through `docker exec` | Isaac Sim, Isaac Lab, and the `/workspace` repository |
 
-Los comandos de Docker se ejecutan en el **host remoto**, no en la terminal local y no dentro de otro contenedor.
+Docker commands run on the remote host, not on the local machine and not inside another container.
 
-## 1. Preparar y publicar el repositorio local
+## 1. Prepare and publish locally
 
-Desde la raíz local:
+From the local repository root:
 
 ```bash
 cd ~/memo/space-minig-manufacturing
@@ -55,41 +54,39 @@ uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_lunar_scene.
 git status --short
 git diff --check
 git add README.md AGENTS.md docs labs assets .gitignore
-git commit -m "docs: document reproducible lunar rover workflow"
+git commit -m "docs: standardize project documentation in English"
 git push
 ```
 
-Repositorio usado:
+Repository URL:
 
 ```text
 https://github.com/gmgalvan/space-minig-manufacturing
 ```
 
-El `.gitignore` debe excluir al menos `.venv`, caches Python, logs, editores y secretos locales.
+## 2. Deploy from the correct Brev page
 
-## 2. Crear el entorno desde la página correcta
+1. Open [NVIDIA Brev](https://brev.nvidia.com/) and sign in.
+2. Verify the available credit.
+3. Open **Launchables**, search for **Isaac Launchable**, and open its dedicated page.
+4. Verify that the description includes Isaac Sim and Isaac Lab.
+5. Select **Deploy Launchable**.
+6. Choose a compatible RTX GPU. The reference session used an **L40S**.
+7. Select an available region. Changing regions does not fix a broken lifecycle script.
+8. Use a stable name such as `space-mining-lab-01`.
+9. Review the total hourly price and deploy.
 
-1. Abre [NVIDIA Brev](https://brev.nvidia.com/) e inicia sesión.
-2. Revisa que haya crédito disponible.
-3. Entra en **Launchables**, busca **Isaac Launchable** y abre su página.
-4. Comprueba que la descripción incluye Isaac Sim e Isaac Lab.
-5. Pulsa **Deploy Launchable**.
-6. Selecciona una GPU RTX compatible. La sesión de referencia usó una **L40S**.
-7. Elige región según disponibilidad; una región distinta no repara un lifecycle script defectuoso.
-8. Asigna un nombre estable, por ejemplo `space-mining-lab-01`.
-9. Lee el precio total por hora y pulsa **Deploy Launchable**.
-
-No añadas Isaac Launchable desde el formulario genérico **Create Environment → Edit → Launchables** si devuelve:
+Avoid adding Isaac Launchable through the generic **Create Environment → Edit → Launchables** form if it returns:
 
 ```text
 Error creating instance: rpc error: code = Internal desc = lifecycle script is empty
 ```
 
-La ruta que funcionó fue abrir la página propia del Launchable y desplegar desde allí.
+The working path was the dedicated Isaac Launchable page.
 
-## 3. Esperar el aprovisionamiento
+## 3. Wait for provisioning
 
-Estados esperados:
+Expected progress:
 
 ```text
 Provisioned GPU instance
@@ -98,27 +95,27 @@ Run startup script
 Check service status
 ```
 
-En la página de la instancia:
+Expected instance states:
 
 ```text
 Compute: Running
 VM Mode: Built
-script: Executing → Completed
+Lifecycle script: Executing → Completed
 Secure Link: Loading → Healthy
 ```
 
-El proceso puede tardar varios minutos porque construye imágenes y calienta cachés de Isaac Sim. Si el enlace se abre antes de que el servicio esté listo, es normal obtener:
+Building images and warming Isaac Sim caches can take several minutes. Opening the service too early may show:
 
 ```text
 502 Bad Gateway
 Host Error
 ```
 
-Primero revisa el estado y los logs; refrescar repetidamente el navegador no inicia el backend.
+Check instance state and logs instead of repeatedly refreshing the browser.
 
-## 4. Instalar Brev CLI en WSL/local
+## 4. Install and authenticate the Brev CLI
 
-En la terminal **local**:
+Run on the local machine:
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/brevdev/brev-cli/main/bin/install-latest.sh)"
@@ -126,64 +123,44 @@ export PATH="$HOME/.local/bin:$PATH"
 brev login
 ```
 
-Introduce el correo asociado a Brev. Si el navegador no se abre, copia la URL temporal mostrada y complétala en tu navegador. No guardes ni compartas esa URL.
+Enter the email associated with Brev. If the browser does not open, use the temporary URL printed by the CLI. Never save or share that URL.
 
-Lista las instancias:
+List instances:
 
 ```bash
 brev ls
 ```
 
-Estado listo de referencia:
+Reference ready state:
 
 ```text
 NAME                 STATUS   BUILD      SHELL  GPU
 space-mining-lab-01  RUNNING  COMPLETED  READY  L40S
 ```
 
-Conéctate:
+Connect:
 
 ```bash
 brev shell space-mining-lab-01
 ```
 
-En el primer intento puede aparecer:
+The first attempt can report a hostname resolution failure while Brev refreshes SSH configuration. The connection is successful when the prompt changes to `ubuntu@brev-...:~$`.
 
-```text
-Could not resolve hostname ...
-Connection failed, refreshing SSH config and retrying...
-```
+## 5. Verify the remote host
 
-Si Brev vuelve a intentarlo y terminas en `ubuntu@brev-...:~$`, la conexión fue correcta.
-
-## 5. Verificar GPU y archivos del host remoto
-
-Ya dentro del **host remoto**:
+Run on the remote host:
 
 ```bash
 nvidia-smi
 ls ~
-```
-
-`nvidia-smi` debe mostrar la GPU elegida. El Launchable debe haber creado:
-
-```text
-~/isaac-launchable/isaac-lab
-```
-
-Comprueba:
-
-```bash
 cd ~/isaac-launchable/isaac-lab
 ls
 docker compose ps
 ```
 
-## 6. Camino feliz: lifecycle completado
+The Launchable should create `~/isaac-launchable/isaac-lab`. If `docker compose ps` already shows `nginx`, `vscode`, and `web-viewer`, continue to section 7.
 
-Si el script aparece `Completed` y `docker compose ps` muestra `nginx`, `vscode` y `web-viewer` activos, salta a la sección 8.
-
-Servicios esperados:
+Expected services:
 
 ```text
 isaac-lab-nginx-1
@@ -191,41 +168,29 @@ vscode
 web-viewer
 ```
 
-El contenedor `vscode` puede aparecer unos segundos como `health: starting`. Espera y vuelve a ejecutar:
+The `vscode` container may briefly report `health: starting`.
 
-```bash
-docker compose ps
-```
+## 6. Recover a failed lifecycle script
 
-## 7. Recuperación cuando el lifecycle script falla
+### Observed symptoms
 
-### Síntomas observados
+- compute is `Running` and VM Mode is `Built`;
+- the lifecycle script ends as `Failed`;
+- the Secure Link is `Unhealthy`;
+- `docker compose ps` shows no active services;
+- no `isaac-sim.sh` exists in the remote host's home directory.
 
-- la máquina está `Running` y `VM Mode` está `Built`;
-- `script` termina en `Failed`;
-- Secure Link está `Unhealthy`;
-- `docker compose ps` no muestra servicios;
-- no existe `isaac-sim.sh` en el home del host.
+Isaac Sim lives inside the `vscode` container under `/isaac-sim`, so its absence from the host home directory is expected.
 
-La ausencia de `~/isaac-sim.sh` no significa que Isaac Sim no esté en la imagen. Vive dentro del contenedor `vscode`, bajo `/isaac-sim`.
+### Observed cause
 
-### Causa observada
-
-El lifecycle script contenía:
-
-```bash
-dockercompose up -d
-```
-
-El comando correcto lleva un espacio:
+The lifecycle script contained `dockercompose up -d`. The valid command contains a space:
 
 ```bash
 docker compose up -d
 ```
 
-### Levantar servicios manualmente
-
-En el host remoto:
+### Start the services manually
 
 ```bash
 cd ~/isaac-launchable/isaac-lab
@@ -233,16 +198,14 @@ docker compose up -d
 docker compose ps
 ```
 
-Durante la construcción es normal ver varios minutos de descarga/build. También puede aparecer:
+These warnings did not block the reference startup:
 
 ```text
 The "DEV_NGINX_PORT" variable is not set
 Published ports are discarded when using host network mode
 ```
 
-En la sesión de referencia esas advertencias no impidieron iniciar los tres servicios.
-
-### Completar la preparación que omitió el lifecycle
+### Complete the skipped Isaac Sim preparation
 
 ```bash
 docker exec -u root vscode sed -i \
@@ -260,7 +223,7 @@ docker exec -u root vscode install -d -o ubuntu -g ubuntu \
 docker exec -u ubuntu:ubuntu -w /isaac-sim vscode ./warmup.sh
 ```
 
-El warmup corre en primer plano. No presiones `Ctrl+C` mientras continúe cargando extensiones. Espera hasta ver:
+The warmup runs in the foreground. Do not interrupt it while extensions are still loading. Wait for:
 
 ```text
 Simulation App Startup Complete
@@ -269,11 +232,11 @@ app ready
 [INFO] Using Python: "/workspace/isaaclab/_isaac_sim/python.sh"
 ```
 
-Cuando vuelve el prompt del host, terminó. Si queda intencionalmente abierto después de `app ready`, `Ctrl+C` es válido; confirma que volvió el prompt antes del siguiente comando.
+When the remote prompt returns, the warmup has ended. If it intentionally remains open after `app ready`, press `Ctrl+C` once and confirm the prompt returns.
 
-## 8. Clonar o actualizar el proyecto dentro del contenedor
+## 7. Clone or update the project in the container
 
-Desde el host remoto:
+Run from the remote host:
 
 ```bash
 docker exec -u ubuntu vscode bash -lc '
@@ -285,30 +248,26 @@ docker exec -u ubuntu vscode bash -lc '
 '
 ```
 
-Verifica:
+Verify the copy and commit:
 
 ```bash
 docker exec -u ubuntu vscode bash -lc \
-  'cd /workspace/space-minig-manufacturing && git status --short && ls labs/01-lunar-rover'
+  'cd /workspace/space-minig-manufacturing && git status --short && git rev-parse --short HEAD && ls labs/01-lunar-rover'
 ```
 
-No vuelvas a ejecutar `git clone` si el directorio ya existe; usa `git pull --ff-only`.
+Do not clone again when the directory already exists; use `git pull --ff-only`.
 
-## 9. Abrir el viewer
+## 8. Open the viewer
 
-En la página Brev, abre el enlace llamado **isaac**. Si abre la raíz o una página vacía, añade:
+Open the **isaac** service from the Brev instance page. If it opens a blank root page, append:
 
 ```text
 /viewer/
 ```
 
-El viewer puede mostrar `WAITING FOR STREAM` mientras no exista un proceso Isaac Sim con livestream. Esto es correcto: primero deja abierta esa pestaña y luego lanza el script desde SSH.
+`WAITING FOR STREAM` means no Isaac Sim process is currently publishing a livestream. Leave the viewer tab open and launch one of the following scripts through SSH.
 
-## 10. Ejecutar el rover
-
-### Inspección sin motores
-
-En el host remoto:
+## 9. Open the rover without motors
 
 ```bash
 cd ~/isaac-launchable/isaac-lab
@@ -317,132 +276,117 @@ docker exec -it -u ubuntu:ubuntu -w /workspace/isaaclab vscode bash -lc \
   './isaaclab.sh -p /workspace/space-minig-manufacturing/labs/01-lunar-rover/scripts/run_lunar_rover.py --livestream 2 --viz kit'
 ```
 
-Espera `app ready` y:
+Expected messages:
 
 ```text
-[INFO]: Escena lunar abierta: .../lunar_rover_scene_v0.usda
-[INFO]: Simulación activa; detener con Ctrl+C.
+[INFO]: Lunar scene opened: .../lunar_rover_scene_v0.usda
+[INFO]: Simulation is active; stop it with Ctrl+C.
 ```
 
-Regresa al viewer. Debes ver `World`, `PhysicsScene`, `LunarGround` y `LunarRover`. El script ya activa la línea de tiempo; no necesitas encontrar un botón Play.
+Return to the viewer. The Stage should include `World`, `PhysicsScene`, `LunarGround`, and `LunarRover`. The script already starts the timeline; no UI Play button is required.
 
-### Tracción y medición
+Stop this process with `Ctrl+C` before starting the traction test.
 
-Detén la inspección anterior con `Ctrl+C`. Después:
+## 10. Run and measure traction
 
 ```bash
 docker exec -it -u ubuntu:ubuntu -w /workspace/isaaclab vscode bash -lc \
   './isaaclab.sh -p /workspace/space-minig-manufacturing/labs/01-lunar-rover/scripts/drive_lunar_rover.py --livestream 2 --viz kit --duration 8 --wheel-speed 120'
 ```
 
-Resultado de referencia:
+Reference result:
 
 ```text
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/FrontLeftAxle
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/FrontRightAxle
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/RearLeftAxle
-[DEBUG]: Motor configurado: /World/LunarRover/Joints/RearRightAxle
-[INFO]: Motores activos durante 8.0 s.
-[RESULT]: desplazamiento=3.928 m; duración=8.01 s
-[INFO]: La escena queda abierta para inspección. Detener con Ctrl+C.
+[DEBUG]: Motor configured: /World/LunarRover/Joints/FrontLeftAxle
+[DEBUG]: Motor configured: /World/LunarRover/Joints/FrontRightAxle
+[DEBUG]: Motor configured: /World/LunarRover/Joints/RearLeftAxle
+[DEBUG]: Motor configured: /World/LunarRover/Joints/RearRightAxle
+[INFO]: Motors active for 8.0 s.
+[RESULT]: displacement=3.928 m; duration=8.01 s
+[INFO]: The scene remains open for inspection. Stop it with Ctrl+C.
 ```
 
-El movimiento ocurre durante los primeros ocho segundos. Después la línea de tiempo se detiene y la escena permanece abierta. Presiona `Ctrl+C` cuando termines de inspeccionarla.
+The rover moves during the requested duration. The script then stops the timeline and leaves the application open for inspection. Press `Ctrl+C` when finished.
 
-## 11. Sincronización para iterar
+## 11. Short iteration loop
 
-Flujo corto para cambios posteriores:
-
-En local:
+On the local machine:
 
 ```bash
-git add <archivos>
-git commit -m "descripcion del cambio"
+git add <files>
+git commit -m "describe the change"
 git push
 ```
 
-En el host Brev:
+On the Brev remote host:
 
 ```bash
 docker exec -u ubuntu vscode bash -lc \
   'cd /workspace/space-minig-manufacturing && git pull --ff-only'
 ```
 
-Luego repite el comando de tracción. No hace falta reconstruir los contenedores por cambios en scripts o `.usda` del proyecto.
+Project-only Python or `.usda` changes do not require rebuilding the containers.
 
-## 12. Diagnóstico rápido
-
-### ¿Los contenedores siguen activos?
+## 12. Diagnostics
 
 ```bash
+# Container health
 cd ~/isaac-launchable/isaac-lab
 docker compose ps
-```
 
-### ¿El contenedor ve la GPU?
-
-```bash
+# GPU inside the container
 docker exec vscode nvidia-smi
-```
 
-### ¿Hay un Isaac Sim ejecutándose?
-
-```bash
+# Active Isaac or Kit processes
 docker exec vscode bash -lc "ps -ef | grep -E '[k]it|[i]saac'"
-```
 
-### Logs recientes
-
-```bash
+# Recent logs
 docker compose logs --tail=200
 docker logs --tail=200 vscode
 docker logs --tail=200 web-viewer
-```
 
-### Confirmar el repo y commit usados
-
-```bash
+# Project state and commit
 docker exec -u ubuntu vscode bash -lc \
   'cd /workspace/space-minig-manufacturing && git status --short && git rev-parse --short HEAD'
 ```
 
-## 13. Tabla de problemas conocidos
+## 13. Known problems
 
-| Síntoma | Causa probable | Acción |
+| Symptom | Likely cause | Action |
 | --- | --- | --- |
-| `lifecycle script is empty` al desplegar | integración defectuosa en formulario genérico | desplegar desde la página propia de Isaac Launchable |
-| lifecycle `Failed` | `dockercompose` sin espacio | ejecutar `docker compose up -d` y el warmup manual |
-| `502 Bad Gateway` | backend del puerto 80 aún no está listo | comprobar contenedores/logs y esperar |
-| Secure Link `Unhealthy` | nginx o viewer sin backend | ejecutar `docker compose ps` y revisar logs |
-| `WAITING FOR STREAM` | no hay Isaac Sim transmitiendo | ejecutar `run_lunar_rover.py` o `drive_lunar_rover.py` |
-| `Got stop event while waiting for client connection` | proceso detenido o sesión livestream en conflicto | cerrar procesos previos, abrir viewer y relanzar uno solo |
-| `GLFW initialization failed` | sesión headless sin ventana local | aceptable si el WebRTC y el resultado funcionan |
-| `Failed to open /var/run/utmp` | entorno contenedorizado sin sesión de escritorio | aceptable si continúa hasta `app ready` |
-| `joint with disjointed body transforms` | anclas de junta incorrectas | actualizar repo, regenerar USD y no aceptar esa corrida |
-| cambios no aparecen | se actualizó el host, no `/workspace` | hacer `git pull` dentro de `vscode` |
-| `destination path already exists` | repo ya clonado | usar `git pull --ff-only` |
+| `lifecycle script is empty` during deployment | broken generic-form integration | deploy from the dedicated Isaac Launchable page |
+| lifecycle script is `Failed` | `dockercompose` typo | run `docker compose up -d` and the manual warmup |
+| `502 Bad Gateway` | port 80 backend is not ready | check container health and logs, then wait |
+| Secure Link is `Unhealthy` | nginx or viewer has no backend | inspect `docker compose ps` and logs |
+| `WAITING FOR STREAM` | Isaac Sim is not streaming | launch exactly one rover script |
+| `Got stop event while waiting for client connection` | stopped process or competing livestream | close old processes, open the viewer, and relaunch one process |
+| `GLFW initialization failed` | headless session has no local window | acceptable when WebRTC and the result work |
+| `Failed to open /var/run/utmp` | container has no desktop login record | acceptable when startup reaches `app ready` |
+| `joint with disjointed body transforms` | incorrect joint anchors | update and regenerate the USD; reject that run |
+| changes are missing | host copy was updated, container copy was not | pull inside `vscode` |
+| destination already exists | repository is already cloned | use `git pull --ff-only` |
 
-## 14. Cerrar sin perder trabajo
+## 14. Stop or delete the paid environment
 
-1. En la terminal que ejecuta Isaac Sim, presiona `Ctrl+C`.
-2. Confirma que regresó el prompt.
-3. Publica cambios desde el contenedor o, preferiblemente, desde la copia local controlada.
-4. Escribe `exit` para salir de SSH.
-5. En la página Brev pulsa **Stop** si la instancia lo permite.
-6. Confirma que el estado dejó de ser `Running` y que ya no se acumula coste de cómputo.
+1. Press `Ctrl+C` in the terminal running Isaac Sim.
+2. Confirm that the shell prompt returns.
+3. Push important work.
+4. Run `exit` to leave SSH.
+5. Use **Stop** in Brev to stop compute while preserving storage, or **Delete** to remove all remote data and storage charges.
+6. Confirm with `brev ls` that the environment is no longer `RUNNING`.
 
-Usa **Delete** sólo cuando hayas guardado todo y aceptes perder el disco remoto. Algunas configuraciones no admiten Stop/Restart; en ese caso Brev lo indica explícitamente y la única forma de terminar el cobro puede ser eliminar la instancia.
+In the reference session, stopping preserved storage at `$0.04/hour`. Deleting the environment changed compute to `Terminating` and `$0.00/hour`, then removed the environment entirely.
 
-## Checklist de reproducción
+## Reproduction checklist
 
-- [ ] Repositorio local generado, validado y publicado.
-- [ ] Crédito y precio horario revisados.
-- [ ] Isaac Launchable desplegado desde su página propia.
-- [ ] `brev ls` muestra `RUNNING / COMPLETED / READY` o se aplicó recuperación manual.
-- [ ] `nvidia-smi` reconoce la GPU en host/contenedor.
-- [ ] `nginx`, `vscode` y `web-viewer` están activos.
-- [ ] Repo actualizado dentro de `/workspace`.
-- [ ] Viewer abierto en `/viewer/`.
-- [ ] Cuatro motores configurados.
-- [ ] Resultado de desplazamiento registrado.
-- [ ] Proceso cerrado y coste detenido al finalizar.
+- [ ] Local USD files generated, validated, committed, and pushed.
+- [ ] Credit and hourly price reviewed.
+- [ ] Isaac Launchable deployed from its dedicated page.
+- [ ] `brev ls` reports a ready instance, or manual recovery is complete.
+- [ ] Host and container recognize the GPU.
+- [ ] `nginx`, `vscode`, and `web-viewer` are running.
+- [ ] Repository is current inside `/workspace`.
+- [ ] Viewer is open at `/viewer/`.
+- [ ] Four motors are configured.
+- [ ] Displacement result is recorded with the Git commit.
+- [ ] Compute and storage charges are stopped when work is complete.
