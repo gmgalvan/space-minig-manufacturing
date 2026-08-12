@@ -1,103 +1,209 @@
 # Stack NVIDIA para minería y manufactura espacial
 
-Este documento ordena las tecnologías de NVIDIA relevantes para nuestros laboratorios. La prioridad inicial es construir un **gemelo digital operativo** de una operación de excavación y procesamiento lunar: terreno, rover, herramienta, sensores, control y métricas de producción.
+Mapa técnico de las tecnologías NVIDIA que pueden apoyar estos laboratorios, desde un rover OpenUSD hasta un gemelo digital de extracción, procesamiento y manufactura lunar.
 
-> Alcance: esta es una selección técnica para simulación, no una lista de productos a comprar. Antes de depender de una herramienta, confirmar licencia, compatibilidad de GPU, sistema operativo y versión vigente.
+## Decisión actual
 
-## Arquitectura recomendada
+Para el MVP usamos:
 
 ```text
-OpenUSD ──> Omniverse Kit ──> RTX + PhysX
-                  │                 │
-                  │                 └── Isaac Sim: rover, brazo, sensores, ROS 2
-                  │
-                  ├── Replicator: datos sintéticos de cámaras
-                  └── Kit-CAE: datos de térmica, FEM, CFD y modelos sustitutos
+OpenUSD
+  └── Isaac Sim sobre Omniverse Kit
+        ├── PhysX: gravedad, colisiones, juntas y motores
+        ├── RTX: visualización
+        ├── WebRTC livestream: interfaz remota
+        └── Isaac Lab: lanzamiento y futuras tareas de control/aprendizaje
 
-Isaac Lab ──> entrenamiento / optimización de políticas de operación
-Isaac ROS + Jetson ──> percepción y control en el robot físico
-CUDA-X / Modulus / cuOpt ──> cómputo científico y planificación especializada
+NVIDIA Brev + L40S
+  └── ejecución remota porque la GPU local no es adecuada para este flujo
 ```
 
-## Tecnologías núcleo
+El Lab 01 ya comprobó esta cadena con un desplazamiento de `3.928 m` en `8.01 s`. Esa cifra valida integración de software, no realismo sobre regolito.
 
-| Tecnología | Rol | Uso propuesto en este proyecto | Prioridad |
+## Arquitectura objetivo
+
+```text
+CAD / datos científicos / GIS
+              │
+              ▼
+           OpenUSD  ◄──────────── capas y variantes del experimento
+              │
+              ▼
+       Omniverse Kit + RTX
+              │
+        ┌─────┴───────────┐
+        ▼                 ▼
+   Isaac Sim            Kit-CAE
+   PhysX/sensores       térmica/FEM/CFD
+        │
+   ┌────┴───────────┐
+   ▼                ▼
+Isaac Lab       Replicator
+control/RL      datos sintéticos
+   │
+   ▼
+Isaac ROS + Jetson ──► prototipo físico
+
+CUDA-X / Modulus / cuOpt ──► cómputo, modelos sustitutos y planificación
+```
+
+## Tecnologías y prioridad
+
+| Tecnología | Función | Uso en este proyecto | Prioridad |
 | --- | --- | --- | --- |
-| [OpenUSD](https://docs.omniverse.nvidia.com/dev-guide/latest/dev-usd.html) | Formato y composición de mundos 3D | Fuente de verdad del sitio minero, activos, capas de escenario y variantes. | P0 |
-| [Omniverse Kit](https://docs.omniverse.nvidia.com/kit/docs/kit-manual/latest/overview.html) | SDK para aplicaciones/extensiones Omniverse | Crear la aplicación de laboratorio, UI, scripts Python y extensiones propias. | P0 |
-| [Omniverse RTX Renderer](https://docs.omniverse.nvidia.com/kit/docs/kit-manual/latest/overview.html) | Render físicamente basado acelerado por RTX | Visualización y cámaras sintéticas con iluminación extrema lunar. | P0 |
-| [Omni Physics / PhysX](https://docs.omniverse.nvidia.com/kit/docs/omni_physics/latest/extensions/runtime/source/omni.physx/docs/index.html) | Motor de física conectado a USD | Gravedad lunar, colisiones, articulaciones, ruedas, brazo y herramientas. | P0 |
-| [Isaac Sim](https://docs.isaacsim.omniverse.nvidia.com/latest/robot_simulation/index.html) | Simulador de robótica sobre Omniverse | Prototipar rovers, excavadoras, manipuladores, sensores y control. | P0 |
-| [Isaac Lab](https://isaac-sim.github.io/IsaacLab/develop/source/setup/ecosystem.html) | Framework modular de aprendizaje robótico | Entrenar políticas para excavación, carga, navegación y manipulación bajo incertidumbre. | P1 |
-| [Isaac Replicator / IRO](https://docs.isaacsim.omniverse.nvidia.com/latest/action_and_event_data_generation/tutorial_replicator_object.html) | Generación de datos sintéticos | Crear imágenes y etiquetas para detectar rocas, obstáculos, tolvas y estado del proceso. | P1 |
-| [Isaac ROS](https://developer.nvidia.com/isaac/ros) | Paquetes ROS 2 acelerados con CUDA | Llevar percepción, navegación y sensores de la simulación al robot real. | P1 |
-| [Jetson](https://developer.nvidia.com/embedded-computing) | Cómputo embebido en el borde | Objetivo de despliegue para autonomía a bordo; no es necesario para el MVP. | P2 |
-| [Kit-CAE](https://docs.omniverse.nvidia.com/guide-kit-cae/latest/index.html) | Integración y visualización de datos CAE | Superponer campos térmicos, estructurales o de flujo sobre el gemelo digital. | P2 |
-| [NVIDIA Modulus](https://developer.nvidia.com/modulus) | Física computacional y modelos ML guiados por ecuaciones | Modelos sustitutos de transferencia térmica, polvo o procesamiento cuando haya datos/ecuaciones. | P2 |
-| [CUDA-X](https://developer.nvidia.com/cuda-x) | Bibliotecas GPU de cómputo acelerado | Acelerar cálculo numérico, visión, IA y pre/postproceso de simulaciones. | P2 |
-| [cuOpt](https://developer.nvidia.com/cuopt) | Optimización de decisiones y rutas | Programar flota, recargas, rutas y turnos de extracción; integrar tras validar el modelo base. | P3 |
+| [OpenUSD](https://docs.omniverse.nvidia.com/dev-guide/latest/dev-usd.html) | composición de escenas 3D | fuente de verdad para activos, referencias, capas y variantes | P0, en uso |
+| [Omniverse Kit](https://docs.omniverse.nvidia.com/kit/docs/kit-manual/latest/overview.html) | runtime y SDK extensible | aplicación, UI, scripting Python y carga de escenas | P0, en uso indirecto |
+| [Omniverse RTX Renderer](https://docs.omniverse.nvidia.com/kit/docs/kit-manual/latest/overview.html) | render acelerado | inspección visual y futuras cámaras sintéticas | P0, en uso |
+| [PhysX / Omni Physics](https://docs.omniverse.nvidia.com/kit/docs/omni_physics/latest/extensions/runtime/source/omni.physx/docs/index.html) | dinámica y colisiones | gravedad lunar, cuerpos rígidos, ruedas, juntas y actuadores | P0, en uso |
+| [Isaac Sim](https://docs.isaacsim.omniverse.nvidia.com/latest/robot_simulation/index.html) | simulación robótica sobre Kit | rover, excavadora, brazo, sensores y ROS 2 | P0, en uso |
+| [Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/index.html) | framework de aprendizaje y tareas robóticas | lanzamiento actual; después control, entornos paralelos y políticas | P0/P1, en uso básico |
+| Livestream WebRTC | interfaz remota de Kit | observar Isaac Sim desde navegador a través de Brev | P0, en uso |
+| [Isaac Sim Replicator](https://docs.isaacsim.omniverse.nvidia.com/latest/replicator_tutorials/index.html) | generación de datos sintéticos | imágenes, etiquetas y variación de iluminación/terreno | P1 |
+| [Isaac ROS](https://developer.nvidia.com/isaac/ros) | ROS 2 acelerado | trasladar percepción/navegación de simulación a hardware | P1 |
+| [Jetson](https://developer.nvidia.com/embedded-computing) | cómputo embebido | autonomía a bordo del prototipo físico | P2 |
+| [Kit-CAE](https://docs.omniverse.nvidia.com/guide-kit-cae/latest/index.html) | visualización e integración CAE | campos térmicos, estructurales y de flujo en el gemelo | P2 |
+| [NVIDIA Modulus](https://developer.nvidia.com/modulus) | IA guiada por física | modelos sustitutos para térmica, polvo o procesos | P2 |
+| [CUDA-X](https://developer.nvidia.com/cuda-x) | bibliotecas GPU | visión, IA, cálculo científico y procesamiento masivo | P2 |
+| [cuOpt](https://developer.nvidia.com/cuopt) | optimización de rutas/decisiones | flota, recarga, transporte e inventario | P3 |
+| [NVIDIA Brev](https://brev.nvidia.com/) | aprovisionamiento GPU | sandbox reproducible con L40S e Isaac Launchable | infraestructura actual |
 
-**Prioridad:** P0 = necesaria para el primer laboratorio; P1 = siguiente iteración; P2 = cuando el caso lo justifique; P3 = optimización de sistema completo.
+**Prioridad:** P0 es necesaria para el laboratorio actual; P1 corresponde a la siguiente fase; P2 entra cuando exista una pregunta multidominio concreta; P3 se reserva para optimización del sistema completo.
 
-## Qué aporta cada capa
+## Qué hace cada capa
 
-### 1. Mundo, activos y escenarios: OpenUSD + Omniverse Kit
+### OpenUSD: contrato del mundo
 
-OpenUSD debe ser el contrato entre disciplinas. Un escenario puede componerse por capas: terreno lunar, rover, planta ISRU, sensores y una capa de experimento que cambie parámetros sin duplicar los activos. Kit proporciona el entorno extensible en Python/C++ para cargar ese mundo, automatizar corridas y construir herramientas de inspección.
-
-Convención inicial de activos:
+OpenUSD describe jerarquía, transformaciones, geometría, metadatos, referencias y composición. En este repositorio:
 
 ```text
-assets/usd/
-├── environments/moon_regolith/
-├── robots/excavator_rover/
-├── facilities/isru_plant/
-└── sensors/
+activo visual
+  + variante física
+  + escena/entorno
+  + parámetros de experimento
 ```
 
-### 2. Física y robótica: PhysX + Isaac Sim
+La referencia de la escena al rover es relativa para mantener portabilidad. USD no ejecuta por sí solo la dinámica; expresa datos que Isaac Sim y PhysX interpretan.
 
-Isaac Sim es el punto de arranque para la simulación del rover. Su base física conecta contenido USD con PhysX; modelaremos cuerpos rígidos, colisiones, masas, articulaciones y actuadores. La interacción altamente granular del regolito es un riesgo de fidelidad: en el MVP se usará una aproximación de terreno y se documentará como limitación, antes de afirmar rendimiento de excavación real.
+### Omniverse Kit: aplicación y extensiones
 
-Variables mínimas del primer escenario:
+Kit carga la escena, ejecuta extensiones y ofrece la interfaz que aparece en el viewer. Los mensajes `[ext: ...] startup`, `Simulation App Starting` y `app ready` pertenecen a este arranque. Para el Lab 01 no desarrollamos todavía una extensión propia: usamos scripts de Isaac Lab que inician Kit.
 
-- gravedad: `1.62 m/s²`;
-- masa, centro de masa y límites articulares explícitos;
-- pendiente, rugosidad y fricción del terreno como parámetros;
-- potencia de tracción/herramienta y estado de batería;
-- cámaras, IMU y odometría simuladas.
+### PhysX: física del rover
 
-### 3. Percepción y autonomía: Replicator, Isaac Lab e Isaac ROS
+El modelo actual incluye:
 
-Replicator genera variaciones controladas de escena y etiquetas para entrenar o probar visión. Isaac Lab permite ejecutar muchos entornos en paralelo para aprendizaje por refuerzo, demostraciones o planificación; entrenaremos sólo después de tener una política base y métricas deterministas. Isaac ROS es el puente ROS 2 para ejecutar la misma cadena de percepción en hardware acelerado.
+- gravedad `1.62 m/s²` hacia `-Z`;
+- chasis rígido de `35 kg`;
+- cuatro ruedas rígidas de `2.5 kg` cada una;
+- colisión para chasis, ruedas y suelo;
+- cuatro `RevoluteJoint` con eje `Y`;
+- cuatro `DriveAPI` angulares configuradas al ejecutar.
 
-### 4. Ingeniería multidominio y optimización: Kit-CAE, Modulus, CUDA-X y cuOpt
+Una advertencia de cuerpos de junta desalineados no es cosmética: indica que PhysX puede ensamblar las piezas mediante un salto. Los scripts actuales alinean `localPos0` con el centro de cada rueda y usan `localPos1 = (0, 0, 0)`.
 
-Estas piezas entran cuando el gemelo ya responda preguntas operativas. Kit-CAE permite contextualizar datos de solvers científicos en USD; Modulus es candidato a modelos sustitutos basados en física; CUDA-X sustenta cómputo GPU; cuOpt serviría para optimización combinatoria de flota y logística. Ninguna sustituye la validación contra datos experimentales.
+### Isaac Sim: integración robótica
 
-## Roadmap de adopción
+Isaac Sim aporta el stage vivo, la línea de tiempo, PhysX, RTX, sensores y herramientas de inspección. `run_lunar_rover.py` abre la escena; `drive_lunar_rover.py` aplica los motores y mide el desplazamiento mundial del chasis.
 
-1. **MVP — rover sobre terreno lunar:** escena USD, gravedad lunar, PhysX, teleoperación/control básico, trayectoria, energía y masa movida.
-2. **Sensores y seguridad:** cámaras RTX, IMU/LiDAR si aplica, detección sintética de rocas y zonas transitables.
-3. **Operación autónoma:** tarea en Isaac Lab con aleatorización de pendientes, fricción, iluminación y carga útil.
-4. **Integración física:** modelo de planta ISRU y datos térmicos/estructurales mediante Kit-CAE o solver externo.
-5. **Flota:** planificación de rutas e inventario; evaluar cuOpt sólo si el problema excede un planificador simple.
+### Isaac Lab: experimentos y escalado
 
-## Decisiones iniciales
+En el MVP, Isaac Lab proporciona `AppLauncher` y el entorno de ejecución. Más adelante debe encapsular:
 
-- El formato canónico de escena será **USD**, no un archivo propietario de una herramienta de CAD.
-- El primer modelo validará navegación y manejo de carga; no intentará resolver de inmediato la mecánica granular del regolito.
-- Se ejecutará en modo sin interfaz para lotes de experimentos y con visualización RTX para inspección y datos sintéticos.
-- Cada escenario declarará versión de Isaac Sim, driver, GPU, semilla y parámetros físicos.
+- observaciones: pose, velocidad, IMU, cámara, batería y carga;
+- acciones: velocidad/par de ruedas y herramienta;
+- eventos: variaciones de fricción, pendiente, masa e iluminación;
+- terminación: distancia, tiempo, vuelco, energía o colisión;
+- métricas: productividad, Wh/m, deslizamiento y seguridad.
+
+No conviene entrenar una política antes de contar con una política determinista y métricas verificables.
+
+### RTX y Replicator: percepción
+
+RTX sirve para inspección y render de sensores. Replicator permitirá generar conjuntos sintéticos con etiquetas para rocas, obstáculos, excavación y llenado de tolva. La iluminación lunar extrema debe variarse de forma controlada y registrar cada semilla.
+
+### Isaac ROS y Jetson: sim-to-real
+
+Isaac ROS puede ejecutar percepción y navegación aceleradas en ROS 2. Jetson es un objetivo posible para el prototipo; ninguno es necesario para demostrar el rover virtual. La transferencia a hardware exige calibración, latencia, ruido de sensor y límites térmicos/energéticos que el MVP no modela.
+
+### Kit-CAE, Modulus, CUDA-X y cuOpt
+
+Estas herramientas entran sólo cuando haya preguntas concretas:
+
+- **Kit-CAE:** visualizar resultados de térmica, FEM o CFD dentro del contexto 3D;
+- **Modulus:** aproximar soluciones físicas costosas después de contar con ecuaciones/datos de validación;
+- **CUDA-X:** acelerar cálculo, visión y análisis;
+- **cuOpt:** optimizar operaciones de flota cuando un planificador sencillo deje de ser suficiente.
+
+## Hardware: local frente a nube
+
+La máquina local reportó una Quadro T2000 Max-Q con `4 GiB` de VRAM. Es útil para:
+
+- editar Python y `.usda`;
+- ejecutar `usd-core` y validaciones estructurales;
+- Git y documentación.
+
+La sesión completa se ejecutó en una L40S remota porque Isaac Sim con RTX, Isaac Lab y livestream necesita mucha más memoria y un entorno compatible. Separar ambos flujos reduce coste:
+
+```text
+local: crear, validar, revisar y versionar
+nube: integrar, renderizar, simular y medir
+```
+
+## Manifiesto de una corrida
+
+Para poder comparar resultados, registra:
+
+```yaml
+date: 2026-08-12
+git_commit: <hash>
+gpu: NVIDIA L40S
+driver: 595.71.05
+cuda_reported: 13.2
+isaac_sim: 6.0.1
+isaac_lab: 3.0.0-beta2-post1
+scene: labs/01-lunar-rover/lunar_rover_scene_v0.usda
+script: labs/01-lunar-rover/scripts/drive_lunar_rover.py
+duration_s: 8
+wheel_speed_deg_s: 120
+displacement_m: 3.928
+```
+
+El hash de commit es indispensable: una escena con el mismo nombre puede haber cambiado.
+
+## Roadmap técnico
+
+1. **Rover reproducible:** OpenUSD, PhysX, livestream y desplazamiento medido — completado como integración básica.
+2. **Control por distancia:** detener en un objetivo y guardar telemetría.
+3. **Terreno parametrizado:** pendiente, rugosidad y fricción; medir deslizamiento.
+4. **Sensores:** cámara/IMU y datos sintéticos.
+5. **Herramienta:** excavación aproximada, masa movida, energía y desgaste.
+6. **Isaac Lab:** tarea paralela con aleatorización y política base.
+7. **ISRU/CAE:** acoplar movilidad, inventario y procesamiento.
+8. **Flota:** planificación y economía operacional.
+
+## Límites científicos actuales
+
+- El terreno no representa partículas de regolito.
+- Fricción, motor y damping son provisionales.
+- No hay suspensión ni modelo de neumático/rueda-terreno validado.
+- No se mide torque, potencia o energía.
+- La iluminación no está configurada como un escenario lunar científico.
+- El resultado de distancia no se ha comparado con datos experimentales.
+
+## Documentos operativos
+
+- [Repetir el Lab 01](../labs/01-lunar-rover/README.md)
+- [Desplegar en NVIDIA Brev](nvidia-brev-isaac-launchable.md)
+- [Convenciones para colaboradores](../AGENTS.md)
 
 ## Fuentes oficiales
 
-- [Omniverse Kit y sus componentes](https://docs.omniverse.nvidia.com/kit/docs/kit-manual/latest/overview.html)
+- [Omniverse Kit](https://docs.omniverse.nvidia.com/kit/docs/kit-manual/latest/overview.html)
 - [OpenUSD en Omniverse](https://docs.omniverse.nvidia.com/dev-guide/latest/dev-usd.html)
-- [Guía de arquitectura de física Omniverse](https://docs.omniverse.nvidia.com/kit/docs/omni_physics/107.3/index.html)
-- [Simulación de robots en Isaac Sim](https://docs.isaacsim.omniverse.nvidia.com/latest/robot_simulation/index.html)
-- [Ecosistema Isaac Lab](https://isaac-sim.github.io/IsaacLab/develop/source/setup/ecosystem.html)
-- [Plataforma Isaac e Isaac ROS](https://developer.nvidia.com/isaac/)
+- [Omni Physics](https://docs.omniverse.nvidia.com/kit/docs/omni_physics/latest/index.html)
+- [Isaac Sim: simulación de robots](https://docs.isaacsim.omniverse.nvidia.com/latest/robot_simulation/index.html)
+- [Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/index.html)
+- [Isaac ROS](https://developer.nvidia.com/isaac/ros)
 - [Kit-CAE](https://docs.omniverse.nvidia.com/guide-kit-cae/latest/index.html)
 
-_Última verificación: 12 de agosto de 2026._
+_Última actualización del procedimiento: 12 de agosto de 2026._

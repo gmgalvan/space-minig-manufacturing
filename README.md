@@ -1,74 +1,121 @@
 # Space Mining & Manufacturing
 
-Un laboratorio abierto para diseñar, probar y documentar sistemas de minería y manufactura fuera de la Tierra. Aquí convertiremos preguntas grandes —cómo extraer recursos, procesarlos y fabricar infraestructura en la Luna, asteroides u órbita— en simulaciones pequeñas, reproducibles y útiles.
+Laboratorio abierto para diseñar y probar sistemas de minería, robótica y manufactura fuera de la Tierra. El proyecto usa modelos pequeños y reproducibles para convertir preguntas de ingeniería —movilidad, extracción, procesamiento, energía y logística— en código, escenas OpenUSD y resultados medibles.
 
-## Visión
+## Estado actual
 
-Construir un conjunto de laboratorios computacionales que ayuden a explorar una cadena completa de **ISRU** (*In-Situ Resource Utilization*):
+El primer laboratorio funcional es un rover lunar mínimo:
 
-1. Localizar y caracterizar recursos.
-2. Extraer regolito, hielo o material asteroidal.
-3. Refinar materias primas en condiciones espaciales.
-4. Convertirlas en energía, propelente y productos manufacturados.
-5. Comparar arquitecturas por masa, energía, tiempo, coste y riesgo.
+- activo geométrico creado con OpenUSD;
+- variante física con masas, colisiones y cuatro juntas revolutas;
+- escenario con terreno y gravedad lunar de `1.62 m/s²`;
+- ejecución remota en NVIDIA Isaac Sim/Isaac Lab mediante NVIDIA Brev;
+- cuatro motores PhysX a `120 grados/s`;
+- prueba observada: `3.928 m` de desplazamiento en `8.01 s`, aproximadamente `0.49 m/s`.
 
-No buscamos prometer una colonia mañana: buscamos modelos honestos, con supuestos explícitos, que hagan mejores las decisiones de ingeniería.
+El resultado es una prueba de integración, no una predicción del desempeño de un rover real. El suelo es una placa rígida, no hay modelo granular de regolito y aún no se calcula consumo eléctrico.
 
-## Laboratorios propuestos
+## Mapa de documentación
 
-| Laboratorio | Pregunta central | Primera simulación |
-| --- | --- | --- |
-| `01-recursos-lunares` | ¿Dónde conviene extraer y qué tan variable es el recurso? | Mapa simplificado de hielo/regolito y rendimiento esperado. |
-| `02-extraccion` | ¿Cuánta energía, desgaste y tiempo requiere mover material? | Excavadora o rover con balances de masa y potencia. |
-| `03-procesamiento-isru` | ¿Cómo se transforma regolito o hielo en productos útiles? | Balance de masa/energía para oxígeno, agua y metales. |
-| `04-manufactura` | ¿Qué piezas pueden fabricarse localmente? | Comparativa entre impresión 3D, sinterizado y material enviado desde Tierra. |
-| `05-logistica-y-economia` | ¿Qué arquitectura escala mejor? | Simulador discreto de flota, inventario y ventanas de misión. |
-| `06-gemelo-de-mision` | ¿Qué ocurre cuando todo se integra? | Escenario de base lunar con fallos y sensibilidad de parámetros. |
+| Documento | Cuándo usarlo |
+| --- | --- |
+| [Lab 01 — rover lunar](labs/01-lunar-rover/README.md) | Crear, validar y ejecutar el rover paso a paso. |
+| [NVIDIA Brev + Isaac Launchable](docs/nvidia-brev-isaac-launchable.md) | Repetir el despliegue remoto completo, resolver fallos y controlar el coste. |
+| [Stack NVIDIA](docs/nvidia-omniverse-y-simulacion.md) | Entender qué tecnología NVIDIA corresponde a cada capa del proyecto. |
+| [Guía para agentes y colaboradores](AGENTS.md) | Mantener convenciones, reproducibilidad y calidad al modificar el repositorio. |
 
-## Principios del proyecto
+## Inicio rápido local
 
-- **Reproducible:** cada resultado debe indicar datos, código, versión y parámetros.
-- **Trazable:** separar hechos, estimaciones y supuestos.
-- **Modular:** un laboratorio puede evolucionar sin romper los demás.
-- **Realista:** incluir incertidumbre, degradación, mantenimiento y fallos.
-- **Abierto a aprender:** los modelos iniciales pueden ser sencillos; deben ser fáciles de cuestionar y mejorar.
+La parte OpenUSD funciona localmente sin instalar Isaac Sim. Requisitos:
 
-## Estructura prevista
+- Linux o WSL 2;
+- Git;
+- `curl` para instalar `uv`;
+- Python 3.10 administrado por `uv`.
+
+Desde la raíz del repositorio:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+
+uv venv --python 3.10
+uv pip install --python .venv/bin/python usd-core
+
+uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_rover.py
+uv run --python .venv/bin/python labs/01-lunar-rover/scripts/validate_rover.py
+uv run --python .venv/bin/python labs/01-lunar-rover/scripts/prepare_physics_rover.py
+uv run --python .venv/bin/python labs/01-lunar-rover/scripts/create_lunar_scene.py
+```
+
+Salidas esperadas:
+
+```text
+assets/usd/robots/lunar_rover_v0.usda
+assets/usd/robots/lunar_rover_physics_v0.usda
+labs/01-lunar-rover/lunar_rover_scene_v0.usda
+```
+
+La validación debe terminar con:
+
+```text
+Validación correcta: rover, unidades y 4 ruedas presentes.
+```
+
+Para la simulación RTX/PhysX completa, continúa con la [guía de NVIDIA Brev](docs/nvidia-brev-isaac-launchable.md).
+
+## Estructura del repositorio
 
 ```text
 .
-├── labs/             # Experimentos y simulaciones independientes
-├── models/           # Componentes reutilizables: masa, energía, térmica, operaciones
-├── data/             # Datos de entrada y sus fuentes
-├── docs/             # Decisiones, notas técnicas y glosario
-├── results/          # Resultados generados (no datos fuente)
-├── README.md
-└── AGENTS.md
+├── assets/
+│   └── usd/robots/                 # Activos OpenUSD visual y físico
+├── docs/
+│   ├── nvidia-brev-isaac-launchable.md
+│   └── nvidia-omniverse-y-simulacion.md
+├── labs/
+│   └── 01-lunar-rover/
+│       ├── README.md
+│       ├── lunar_rover_scene_v0.usda
+│       └── scripts/
+├── .gitignore
+├── AGENTS.md
+└── README.md
 ```
 
-## Cómo empezamos
+Los archivos `.usda` se conservan en texto para poder revisar referencias, unidades, masas, juntas y cambios físicos mediante Git.
 
-El primer hito será un **balance de masa y energía de una planta lunar de oxígeno**. Un modelo mínimo debe permitir variar:
+## Flujo de trabajo reproducible
 
-- producción objetivo (kg de O₂/día);
-- ley de oxígeno del regolito;
-- eficiencia de extracción;
-- potencia disponible y ciclo día/noche;
-- masa de equipos, repuestos y consumibles.
+1. Cambiar los scripts fuente, no sólo el archivo USD generado.
+2. Regenerar el activo visual, la variante física y la escena.
+3. Ejecutar `validate_rover.py` localmente.
+4. Hacer commit y `git push`.
+5. En Brev, ejecutar `git pull` dentro del contenedor `vscode`.
+6. Ejecutar la simulación y registrar parámetros, versiones y resultado.
+7. Detener el proceso con `Ctrl+C` y detener la instancia cuando termine la sesión.
 
-Con eso podremos responder: *¿qué arquitectura produce más oxígeno por kilogramo enviado desde la Tierra?*
+## Roadmap
+
+1. **Movilidad lunar:** mejorar fricción, suspensión, control de distancia y telemetría.
+2. **Sensores:** cámara, IMU, LiDAR y datos sintéticos con Replicator.
+3. **Extracción:** herramienta, carga útil, masa movida, desgaste y energía.
+4. **Procesamiento ISRU:** balances de masa y energía para agua, oxígeno y metales.
+5. **Manufactura:** sinterizado e impresión con material local frente a carga enviada desde Tierra.
+6. **Operación integrada:** flota, inventario, mantenimiento, fallos y economía de misión.
 
 ## Convenciones
 
-- Unidades SI: kg, m, s, K, W, Pa.
-- Los parámetros viven fuera del código cuando sea posible.
-- Cada simulación tiene un `README` breve: objetivo, supuestos, entradas, salidas y cómo ejecutarla.
-- No mezclar datos originales con resultados derivados.
+- Usar SI internamente: kg, m, s, K, W y Pa.
+- Separar hechos, mediciones, estimaciones y supuestos.
+- Versionar parámetros y comandos junto con el experimento.
+- No tratar una visualización exitosa como validación física.
+- Documentar limitaciones que puedan cambiar una conclusión.
+
+## Seguridad y coste
+
+Una instancia GPU remota genera cargos mientras está activa. Antes de desplegar, revisa el precio mostrado por Brev. No publiques URLs privadas, IP, códigos de acceso ni credenciales. Guarda el trabajo en Git antes de detener o eliminar una instancia.
 
 ## Contribuir
 
-Las ideas y las dudas son contribuciones. Antes de crear un modelo nuevo, abre una nota corta con la pregunta que intenta responder, los supuestos y la métrica de éxito. Consulta [AGENTS.md](AGENTS.md) para las reglas de trabajo del repositorio.
-
----
-
-**Horizonte:** hacer que la manufactura espacial sea una disciplina que se pueda experimentar, debatir y mejorar desde el código.
+Cada laboratorio debe responder una pregunta concreta y definir una métrica de éxito. Consulta [AGENTS.md](AGENTS.md) antes de implementar cambios.
