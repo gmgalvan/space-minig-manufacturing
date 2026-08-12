@@ -28,7 +28,7 @@ simulation_app = app_launcher.app
 def main() -> None:
     import omni.timeline
     import omni.usd
-    from pxr import Usd, UsdPhysics
+    from pxr import Usd, UsdGeom, UsdPhysics
 
     scene_path = args_cli.scene.expanduser().resolve()
     if not scene_path.is_file():
@@ -41,6 +41,7 @@ def main() -> None:
         simulation_app.update()
 
     stage = context.get_stage()
+    print("[DEBUG]: Escena cargada; configurando motores...", flush=True)
     for joint_path in WHEEL_JOINTS:
         joint = stage.GetPrimAtPath(joint_path)
         if not joint.IsValid():
@@ -51,13 +52,17 @@ def main() -> None:
         drive.CreateMaxForceAttr(250.0)
         drive.CreateDampingAttr(2.0)
         drive.CreateStiffnessAttr(0.0)
+        print(f"[DEBUG]: Motor configurado: {joint_path}", flush=True)
 
-    rover = stage.GetPrimAtPath("/World/LunarRover")
+    chassis_prim = stage.GetPrimAtPath("/World/LunarRover/Chassis/Body")
+    if not chassis_prim.IsValid():
+        raise RuntimeError("Falta el cuerpo físico del chasis.")
+    chassis = UsdGeom.Xformable(chassis_prim)
     time_code = Usd.TimeCode.Default()
-    start_position = rover.ComputeLocalToWorldTransform(time_code).ExtractTranslation()
+    start_position = chassis.ComputeLocalToWorldTransform(time_code).ExtractTranslation()
     timeline = omni.timeline.get_timeline_interface()
     timeline.play()
-    print(f"[INFO]: Motores activos durante {args_cli.duration:.1f} s.")
+    print(f"[INFO]: Motores activos durante {args_cli.duration:.1f} s.", flush=True)
 
     elapsed = 0.0
     previous_time = timeline.get_current_time()
@@ -68,10 +73,10 @@ def main() -> None:
         previous_time = current_time
 
     timeline.stop()
-    end_position = rover.ComputeLocalToWorldTransform(time_code).ExtractTranslation()
+    end_position = chassis.ComputeLocalToWorldTransform(time_code).ExtractTranslation()
     displacement_m = (end_position - start_position).GetLength()
-    print(f"[RESULT]: desplazamiento={displacement_m:.3f} m; duración={elapsed:.2f} s")
-    print("[INFO]: La escena queda abierta para inspección. Detener con Ctrl+C.")
+    print(f"[RESULT]: desplazamiento={displacement_m:.3f} m; duración={elapsed:.2f} s", flush=True)
+    print("[INFO]: La escena queda abierta para inspección. Detener con Ctrl+C.", flush=True)
 
     while simulation_app.is_running():
         simulation_app.update()
@@ -80,5 +85,10 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
+    except BaseException:
+        import traceback
+
+        traceback.print_exc()
+        raise
     finally:
         simulation_app.close()
