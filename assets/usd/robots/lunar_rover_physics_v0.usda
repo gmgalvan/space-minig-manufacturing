@@ -15,20 +15,23 @@ def Xform "LunarRover" (
     }
 )
 {
-    def Xform "Chassis"
+    def Xform "Chassis" (
+        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        customData = {
+            string physics_role = "chassis"
+        }
+    )
     {
+        float physics:mass = 35
+
         def Cube "Body" (
-            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsCollisionAPI", "PhysicsMassAPI"]
-            customData = {
-                string physics_role = "chassis"
-            }
+            prepend apiSchemas = ["PhysicsCollisionAPI"]
         )
         {
-            float physics:mass = 35
             double size = 1
             float3 xformOp:scale = (1.2, 0.8, 0.35)
             double3 xformOp:translate = (0, 0, 0.53)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
 
         def Cube "SolarPanel"
@@ -36,70 +39,70 @@ def Xform "LunarRover" (
             double size = 1
             float3 xformOp:scale = (0.95, 0.6, 0.03)
             double3 xformOp:translate = (0, 0, 0.72)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
     }
 
     def Xform "Wheels"
     {
         def Cylinder "FrontLeft" (
-            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsCollisionAPI", "PhysicsMassAPI"]
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI"]
             customData = {
                 string component = "wheel"
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             float physics:mass = 2.5
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (0.42, 0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
 
         def Cylinder "FrontRight" (
-            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsCollisionAPI", "PhysicsMassAPI"]
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI"]
             customData = {
                 string component = "wheel"
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             float physics:mass = 2.5
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (0.42, -0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
 
         def Cylinder "RearLeft" (
-            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsCollisionAPI", "PhysicsMassAPI"]
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI"]
             customData = {
                 string component = "wheel"
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             float physics:mass = 2.5
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (-0.42, 0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
 
         def Cylinder "RearRight" (
-            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsCollisionAPI", "PhysicsMassAPI"]
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI"]
             customData = {
                 string component = "wheel"
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             float physics:mass = 2.5
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (-0.42, -0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
     }
 
@@ -114,7 +117,7 @@ def Xform "LunarRover" (
             double size = 1
             float3 xformOp:scale = (0.1, 0.14, 0.08)
             double3 xformOp:translate = (0.62, 0, 0.7)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
 
         def Cube "Antenna"
@@ -122,7 +125,7 @@ def Xform "LunarRover" (
             double size = 1
             float3 xformOp:scale = (0.03, 0.03, 0.4)
             double3 xformOp:translate = (-0.35, 0, 0.94)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
     }
 
@@ -135,9 +138,9 @@ def Xform "LunarRover" (
         )
         {
             uniform token physics:axis = "Y"
-            rel physics:body0 = </LunarRover/Chassis/Body>
+            rel physics:body0 = </LunarRover/Chassis>
             rel physics:body1 = </LunarRover/Wheels/FrontLeft>
-            point3f physics:localPos0 = (0.42, 0.46, -0.35)
+            point3f physics:localPos0 = (0.42, 0.46, 0.18)
             point3f physics:localPos1 = (0, 0, 0)
         }
 
@@ -148,9 +151,9 @@ def Xform "LunarRover" (
         )
         {
             uniform token physics:axis = "Y"
-            rel physics:body0 = </LunarRover/Chassis/Body>
+            rel physics:body0 = </LunarRover/Chassis>
             rel physics:body1 = </LunarRover/Wheels/FrontRight>
-            point3f physics:localPos0 = (0.42, -0.46, -0.35)
+            point3f physics:localPos0 = (0.42, -0.46, 0.18)
             point3f physics:localPos1 = (0, 0, 0)
         }
 
@@ -161,9 +164,9 @@ def Xform "LunarRover" (
         )
         {
             uniform token physics:axis = "Y"
-            rel physics:body0 = </LunarRover/Chassis/Body>
+            rel physics:body0 = </LunarRover/Chassis>
             rel physics:body1 = </LunarRover/Wheels/RearLeft>
-            point3f physics:localPos0 = (-0.42, 0.46, -0.35)
+            point3f physics:localPos0 = (-0.42, 0.46, 0.18)
             point3f physics:localPos1 = (0, 0, 0)
         }
 
@@ -174,9 +177,9 @@ def Xform "LunarRover" (
         )
         {
             uniform token physics:axis = "Y"
-            rel physics:body0 = </LunarRover/Chassis/Body>
+            rel physics:body0 = </LunarRover/Chassis>
             rel physics:body1 = </LunarRover/Wheels/RearRight>
-            point3f physics:localPos0 = (-0.42, -0.46, -0.35)
+            point3f physics:localPos0 = (-0.42, -0.46, 0.18)
             point3f physics:localPos1 = (0, 0, 0)
         }
     }

@@ -20,7 +20,7 @@ def Xform "LunarRover" (
             double size = 1
             float3 xformOp:scale = (1.2, 0.8, 0.35)
             double3 xformOp:translate = (0, 0, 0.53)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
 
         def Cube "SolarPanel"
@@ -28,7 +28,7 @@ def Xform "LunarRover" (
             double size = 1
             float3 xformOp:scale = (0.95, 0.6, 0.03)
             double3 xformOp:translate = (0, 0, 0.72)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
     }
 
@@ -40,11 +40,11 @@ def Xform "LunarRover" (
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (0.42, 0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
 
         def Cylinder "FrontRight" (
@@ -53,11 +53,11 @@ def Xform "LunarRover" (
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (0.42, -0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
 
         def Cylinder "RearLeft" (
@@ -66,11 +66,11 @@ def Xform "LunarRover" (
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (-0.42, 0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
 
         def Cylinder "RearRight" (
@@ -79,11 +79,11 @@ def Xform "LunarRover" (
             }
         )
         {
+            uniform token axis = "Y"
             double height = 0.12
             double radius = 0.18
-            float xformOp:rotateX = 90
             double3 xformOp:translate = (-0.42, -0.46, 0.18)
-            uniform token[] xformOpOrder = ["xformOp:rotateX", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
     }
 
@@ -98,7 +98,7 @@ def Xform "LunarRover" (
             double size = 1
             float3 xformOp:scale = (0.1, 0.14, 0.08)
             double3 xformOp:translate = (0.62, 0, 0.7)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
 
         def Cube "Antenna"
@@ -106,7 +106,7 @@ def Xform "LunarRover" (
             double size = 1
             float3 xformOp:scale = (0.03, 0.03, 0.4)
             double3 xformOp:translate = (-0.35, 0, 0.94)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
     }
 }

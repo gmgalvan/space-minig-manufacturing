@@ -15,12 +15,8 @@ WHEEL_POSITIONS_M = {
     "RearLeft": (-0.42, 0.46, 0.18),
     "RearRight": (-0.42, -0.46, 0.18),
 }
-CHASSIS_POSITION_M = (0.0, 0.0, 0.53)
-
-
 def add_rigid_body(prim: Usd.Prim, mass_kg: float) -> None:
     UsdPhysics.RigidBodyAPI.Apply(prim)
-    UsdPhysics.CollisionAPI.Apply(prim)
     mass_api = UsdPhysics.MassAPI.Apply(prim)
     mass_api.CreateMassAttr(mass_kg)
 
@@ -34,26 +30,22 @@ def main() -> None:
     stage.GetRootLayer().Export(str(OUTPUT_PATH))
     stage = Usd.Stage.Open(str(OUTPUT_PATH))
 
-    chassis = stage.GetPrimAtPath("/LunarRover/Chassis/Body")
+    chassis = stage.GetPrimAtPath("/LunarRover/Chassis")
     add_rigid_body(chassis, mass_kg=35.0)
     chassis.SetCustomDataByKey("physics_role", "chassis")
+    UsdPhysics.CollisionAPI.Apply(stage.GetPrimAtPath("/LunarRover/Chassis/Body"))
 
     for wheel_name, wheel_position in WHEEL_POSITIONS_M.items():
         wheel_path = f"/LunarRover/Wheels/{wheel_name}"
         wheel = stage.GetPrimAtPath(wheel_path)
         add_rigid_body(wheel, mass_kg=2.5)
+        UsdPhysics.CollisionAPI.Apply(wheel)
 
         joint = UsdPhysics.RevoluteJoint.Define(stage, f"/LunarRover/Joints/{wheel_name}Axle")
         joint.CreateBody0Rel().SetTargets([chassis.GetPath()])
         joint.CreateBody1Rel().SetTargets([wheel.GetPath()])
         joint.CreateAxisAttr("Y")
-        joint.CreateLocalPos0Attr(
-            Gf.Vec3f(
-                wheel_position[0] - CHASSIS_POSITION_M[0],
-                wheel_position[1] - CHASSIS_POSITION_M[1],
-                wheel_position[2] - CHASSIS_POSITION_M[2],
-            )
-        )
+        joint.CreateLocalPos0Attr(Gf.Vec3f(*wheel_position))
         joint.CreateLocalPos1Attr(Gf.Vec3f(0.0, 0.0, 0.0))
         joint.GetPrim().SetCustomDataByKey("drive_candidate", True)
 

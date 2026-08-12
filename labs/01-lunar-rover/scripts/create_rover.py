@@ -15,8 +15,8 @@ def define_box(stage: Usd.Stage, path: str, size: tuple[float, float, float], po
     """Crea una caja centrada en `position`, con dimensiones en metros."""
     cube = UsdGeom.Cube.Define(stage, path)
     cube.CreateSizeAttr(1.0)
-    cube.AddScaleOp().Set(Gf.Vec3f(*size))
     cube.AddTranslateOp().Set(Gf.Vec3d(*position))
+    cube.AddScaleOp().Set(Gf.Vec3f(*size))
     return cube
 
 
@@ -25,7 +25,7 @@ def define_wheel(stage: Usd.Stage, name: str, position: tuple[float, float, floa
     wheel = UsdGeom.Cylinder.Define(stage, f"/LunarRover/Wheels/{name}")
     wheel.CreateRadiusAttr(0.18)
     wheel.CreateHeightAttr(0.12)
-    wheel.AddRotateXOp().Set(90.0)
+    wheel.CreateAxisAttr(UsdGeom.Tokens.y)
     wheel.AddTranslateOp().Set(Gf.Vec3d(*position))
     wheel.GetPrim().SetCustomDataByKey("component", "wheel")
     return wheel

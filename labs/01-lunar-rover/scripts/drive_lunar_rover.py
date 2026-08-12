@@ -54,7 +54,7 @@ def main() -> None:
         drive.CreateStiffnessAttr(0.0)
         print(f"[DEBUG]: Motor configurado: {joint_path}", flush=True)
 
-    chassis_prim = stage.GetPrimAtPath("/World/LunarRover/Chassis/Body")
+    chassis_prim = stage.GetPrimAtPath("/World/LunarRover/Chassis")
     if not chassis_prim.IsValid():
         raise RuntimeError("Falta el cuerpo físico del chasis.")
     chassis = UsdGeom.Xformable(chassis_prim)
