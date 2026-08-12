@@ -57,6 +57,17 @@ uv run --python .venv/bin/python python labs/01-lunar-rover/scripts/create_lunar
 
 El resultado para abrir en Isaac Sim será `labs/01-lunar-rover/lunar_rover_scene_v0.usda`.
 
+## Ejecutar en Isaac Lab con livestream
+
+En un entorno que ya tenga Isaac Lab e Isaac Sim, el lanzador del laboratorio abre la escena y mantiene activa la línea de tiempo:
+
+```bash
+./isaaclab.sh -p /ruta/al/repositorio/labs/01-lunar-rover/scripts/run_lunar_rover.py \
+  --livestream 2 --viz kit
+```
+
+Detén el proceso con `Ctrl+C` cuando termines la visualización.
+
 ## Próximo paso: sandbox NVIDIA
 
 Al tener un sandbox NVIDIA con GPU RTX:
