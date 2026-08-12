@@ -1,0 +1,35 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def "World"
+{
+    def PhysicsScene "PhysicsScene"
+    {
+        vector3f physics:gravityDirection = (0, 0, -1)
+        float physics:gravityMagnitude = 1.62
+    }
+
+    def Cube "LunarGround" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+        customData = {
+            string material = "regolith_placeholder"
+        }
+    )
+    {
+        double size = 1
+        float3 xformOp:scale = (20, 20, 0.1)
+        double3 xformOp:translate = (0, 0, -0.05)
+        uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
+    }
+
+    def Xform "LunarRover" (
+        prepend references = @/home/gmgalvan/memo/space-minig-manufacturing/assets/usd/robots/lunar_rover_physics_v0.usda@</LunarRover>
+    )
+    {
+    }
+}
+

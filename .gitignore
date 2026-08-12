@@ -1,0 +1,27 @@
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environment and editor metadata
+.env
+.env.*
+.vscode/
+.idea/
+
+# NVIDIA Omniverse / Isaac Sim local caches and logs
+.nvidia-omniverse/
+.nv/
+_isaac_sim/
+isaac-sim/
+isaacsim/
+ov_cache/
+logs/
+
+# Generated experiment outputs (source USD assets remain versioned)
+results/
+*.log
