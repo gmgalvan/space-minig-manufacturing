@@ -28,7 +28,7 @@ simulation_app = app_launcher.app
 def main() -> None:
     import omni.timeline
     import omni.usd
-    from pxr import UsdPhysics
+    from pxr import Usd, UsdPhysics
 
     scene_path = args_cli.scene.expanduser().resolve()
     if not scene_path.is_file():
@@ -53,7 +53,8 @@ def main() -> None:
         drive.CreateStiffnessAttr(0.0)
 
     rover = stage.GetPrimAtPath("/World/LunarRover")
-    start_position = rover.ComputeLocalToWorldTransform(0).ExtractTranslation()
+    time_code = Usd.TimeCode.Default()
+    start_position = rover.ComputeLocalToWorldTransform(time_code).ExtractTranslation()
     timeline = omni.timeline.get_timeline_interface()
     timeline.play()
     print(f"[INFO]: Motores activos durante {args_cli.duration:.1f} s.")
@@ -67,7 +68,7 @@ def main() -> None:
         previous_time = current_time
 
     timeline.stop()
-    end_position = rover.ComputeLocalToWorldTransform(0).ExtractTranslation()
+    end_position = rover.ComputeLocalToWorldTransform(time_code).ExtractTranslation()
     displacement_m = (end_position - start_position).GetLength()
     print(f"[RESULT]: desplazamiento={displacement_m:.3f} m; duración={elapsed:.2f} s")
     print("[INFO]: La escena queda abierta para inspección. Detener con Ctrl+C.")
