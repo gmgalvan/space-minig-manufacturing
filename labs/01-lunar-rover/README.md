@@ -68,6 +68,15 @@ En un entorno que ya tenga Isaac Lab e Isaac Sim, el lanzador del laboratorio ab
 
 Detén el proceso con `Ctrl+C` cuando termines la visualización.
 
+## Prueba de tracción
+
+El siguiente lanzador aplica motores físicos a las cuatro juntas y registra el desplazamiento:
+
+```bash
+./isaaclab.sh -p /ruta/al/repositorio/labs/01-lunar-rover/scripts/drive_lunar_rover.py \
+  --livestream 2 --viz kit --duration 8
+```
+
 ## Próximo paso: sandbox NVIDIA
 
 Al tener un sandbox NVIDIA con GPU RTX:
