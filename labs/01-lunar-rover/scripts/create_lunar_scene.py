@@ -1,5 +1,6 @@
 """Crea una escena lunar mínima que referencia el rover preparado para física."""
 
+import os
 from pathlib import Path
 
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics
@@ -30,8 +31,9 @@ def main() -> None:
     ground.GetPrim().SetCustomDataByKey("material", "regolith_placeholder")
 
     rover = UsdGeom.Xform.Define(stage, "/World/LunarRover")
+    rover_reference = os.path.relpath(ROVER_PATH, start=OUTPUT_PATH.parent)
     rover.GetPrim().GetReferences().AddReference(
-        assetPath=str(ROVER_PATH), primPath=Sdf.Path("/LunarRover")
+        assetPath=rover_reference, primPath=Sdf.Path("/LunarRover")
     )
 
     stage.SetDefaultPrim(stage.GetPrimAtPath("/World"))

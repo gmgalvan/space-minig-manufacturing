@@ -27,7 +27,7 @@ def "World"
     }
 
     def Xform "LunarRover" (
-        prepend references = @/home/gmgalvan/memo/space-minig-manufacturing/assets/usd/robots/lunar_rover_physics_v0.usda@</LunarRover>
+        prepend references = @../../assets/usd/robots/lunar_rover_physics_v0.usda@</LunarRover>
     )
     {
     }
